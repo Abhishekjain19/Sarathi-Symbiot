@@ -1,10 +1,41 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/App";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import { BookOpen } from "lucide-react";
+
+const subjects = [
+  {
+    id: 1,
+    name: "Physics",
+    professor: "Dr. Sharma",
+    lectureCount: 12,
+    completedCount: 5,
+    color: "from-blue-500/20 to-blue-600/20",
+    borderColor: "border-blue-500/30",
+  },
+  {
+    id: 2,
+    name: "Mathematics",
+    professor: "Dr. Patel",
+    lectureCount: 15,
+    completedCount: 8,
+    color: "from-purple-500/20 to-purple-600/20",
+    borderColor: "border-purple-500/30",
+  },
+  {
+    id: 3,
+    name: "Chemistry",
+    professor: "Prof. Verma",
+    lectureCount: 10,
+    completedCount: 3,
+    color: "from-green-500/20 to-green-600/20",
+    borderColor: "border-green-500/30",
+  },
+];
 
 const LearningHistory = () => {
   const navigate = useNavigate();
@@ -30,19 +61,25 @@ const LearningHistory = () => {
             <TabsTrigger value="tests">Tests</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="lectures" className="space-y-4">
-            {/* Mock data - replace with actual data later */}
-            {Array.from({ length: 5 }).map((_, idx) => (
-              <Card key={idx} className="bg-sarathi-darkCard border-sarathi-gray/30 p-4">
-                <h3 className="font-medium">Introduction to Physics {idx + 1}</h3>
-                <p className="text-sm text-muted-foreground">Dr. Sharma</p>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-xs text-muted-foreground">45 minutes</span>
-                  <span className="text-xs bg-green-600/20 text-green-500 px-2 py-1 rounded">
-                    Completed
-                  </span>
-                </div>
-              </Card>
+          <TabsContent value="lectures" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {subjects.map((subject) => (
+              <Link key={subject.id} to={`/learning/${subject.name.toLowerCase()}`}>
+                <Card className={`bg-gradient-to-br ${subject.color} ${subject.borderColor} p-6 hover:scale-105 transition-transform duration-200 cursor-pointer`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-white/10 rounded-full p-2">
+                      <BookOpen className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-lg">{subject.name}</h3>
+                      <p className="text-sm text-muted-foreground">{subject.professor}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{subject.lectureCount} lectures</span>
+                    <span className="text-green-400">{subject.completedCount} completed</span>
+                  </div>
+                </Card>
+              </Link>
             ))}
           </TabsContent>
           

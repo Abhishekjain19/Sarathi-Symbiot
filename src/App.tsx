@@ -16,6 +16,7 @@ import AssessmentPage from "./pages/AssessmentPage";
 import MapPage from "./pages/MapPage";
 import NotFound from "./pages/NotFound";
 import LearningHistory from "./pages/LearningHistory";
+import SubjectLectures from "./pages/SubjectLectures";
 
 // Types
 type UserRole = "student" | "professor" | "ngo" | null;
@@ -60,6 +61,7 @@ const App = () => {
               <Route path="/assessment/:id" element={<AssessmentPage />} />
               <Route path="/maps" element={<MapPage />} />
               <Route path="/learning/all" element={<LearningHistory />} />
+              <Route path="/learning/:subject" element={<SubjectLectures />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
