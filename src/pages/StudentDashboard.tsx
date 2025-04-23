@@ -1,7 +1,6 @@
-
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Play, BarChart3, Download, Clock } from "lucide-react";
+import { Play, BarChart3, Download, Clock, ChevronRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,8 +81,11 @@ const StudentDashboard = () => {
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-medium">Continue Learning</h2>
-            <Link to="/lecture/latest" className="text-sm text-secondary">
-              See all
+            <Link 
+              to="/learning/all" 
+              className="text-sm text-secondary hover:text-secondary/80 transition-colors flex items-center gap-1"
+            >
+              See all <ChevronRight size={16} />
             </Link>
           </div>
           
