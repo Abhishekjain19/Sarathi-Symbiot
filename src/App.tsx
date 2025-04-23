@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,7 @@ import MapPage from "./pages/MapPage";
 import NotFound from "./pages/NotFound";
 import LearningHistory from "./pages/LearningHistory";
 import SubjectLectures from "./pages/SubjectLectures";
+import AssignmentsPage from "./pages/AssignmentsPage";
 
 // Types
 type UserRole = "student" | "professor" | "ngo" | null;
@@ -30,7 +30,7 @@ interface AuthContextType {
 }
 
 // Create Auth context
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = /*#__PURE__*/ createContext(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -63,6 +63,7 @@ const App = () => {
               <Route path="/maps" element={<MapPage />} />
               <Route path="/learning/all" element={<LearningHistory />} />
               <Route path="/learning/:subject" element={<SubjectLectures />} />
+              <Route path="/learning/assignments/:subject" element={<AssignmentsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

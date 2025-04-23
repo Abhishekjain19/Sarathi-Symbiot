@@ -1,11 +1,10 @@
-
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/App";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { BookOpen } from "lucide-react";
+import { BookOpen, FileText } from "lucide-react";
 
 const subjects = [
   {
@@ -83,10 +82,26 @@ const LearningHistory = () => {
             ))}
           </TabsContent>
           
-          <TabsContent value="assignments" className="space-y-4">
-            <p className="text-center text-muted-foreground py-8">
-              No assignments yet
-            </p>
+          <TabsContent value="assignments" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {subjects.map((subject) => (
+              <Link key={subject.id} to={`/learning/assignments/${subject.name.toLowerCase()}`}>
+                <Card className={`bg-gradient-to-br ${subject.color} ${subject.borderColor} p-6 hover:scale-105 transition-transform duration-200 cursor-pointer`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-white/10 rounded-full p-2">
+                      <FileText className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-lg">{subject.name}</h3>
+                      <p className="text-sm text-muted-foreground">{subject.professor}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">3 Assignments</span>
+                    <span className="text-green-400">2 Completed</span>
+                  </div>
+                </Card>
+              </Link>
+            ))}
           </TabsContent>
           
           <TabsContent value="tests" className="space-y-4">
