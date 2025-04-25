@@ -73,7 +73,7 @@ const grades = [
 const AllLectures = () => {
   const navigate = useNavigate();
   const { isLoggedIn, userRole } = useAuth();
-  const [selectedGrade, setSelectedGrade] = useState<string>("");
+  const [selectedGrade, setSelectedGrade] = useState<string | "all">("all");
 
   useEffect(() => {
     if (!isLoggedIn || userRole !== "professor") {
@@ -81,7 +81,7 @@ const AllLectures = () => {
     }
   }, [isLoggedIn, navigate, userRole]);
 
-  const filteredLectures = selectedGrade
+  const filteredLectures = selectedGrade !== "all"
     ? allLectures.filter(lecture => lecture.grade === selectedGrade)
     : allLectures;
 
@@ -99,7 +99,7 @@ const AllLectures = () => {
                   <SelectValue placeholder="Filter by grade" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Grades</SelectItem>
+                  <SelectItem value="all">All Grades</SelectItem>
                   {grades.map((grade) => (
                     <SelectItem key={grade} value={grade}>
                       {grade} Grade
