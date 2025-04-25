@@ -94,7 +94,10 @@ const AllLectures = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Filter size={20} className="text-muted-foreground" />
-              <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+              <Select 
+                value={selectedGrade} 
+                onValueChange={(value: string) => setSelectedGrade(value)}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by grade" />
                 </SelectTrigger>
