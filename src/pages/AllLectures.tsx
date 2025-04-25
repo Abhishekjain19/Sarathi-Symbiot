@@ -1,7 +1,7 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Play, Circle } from "lucide-react";
+import { Users, Play, Circle, Filter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -9,6 +9,13 @@ import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/App";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Mock data - Replace with actual data later
 const allLectures = [
@@ -19,6 +26,7 @@ const allLectures = [
     date: "22 Apr",
     thumbnail: "https://placehold.co/400x225/1a237e/ffffff?text=Physics",
     isLive: true,
+    grade: "10th",
   },
   {
     id: 2,
@@ -27,6 +35,7 @@ const allLectures = [
     date: "20 Apr",
     thumbnail: "https://placehold.co/400x225/26a69a/ffffff?text=Mathematics",
     isLive: false,
+    grade: "12th",
   },
   {
     id: 3,
@@ -35,6 +44,7 @@ const allLectures = [
     date: "15 Apr",
     thumbnail: "https://placehold.co/400x225/1a237e/ffffff?text=Chemistry",
     isLive: true,
+    grade: "9th",
   },
   {
     id: 4,
@@ -43,6 +53,7 @@ const allLectures = [
     date: "10 Apr",
     thumbnail: "https://placehold.co/400x225/1a237e/ffffff?text=Physics",
     isLive: false,
+    grade: "12th",
   },
   {
     id: 5,
@@ -51,12 +62,18 @@ const allLectures = [
     date: "5 Apr",
     thumbnail: "https://placehold.co/400x225/1a237e/ffffff?text=Chemistry",
     isLive: false,
+    grade: "11th",
   }
+];
+
+const grades = [
+  "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th"
 ];
 
 const AllLectures = () => {
   const navigate = useNavigate();
   const { isLoggedIn, userRole } = useAuth();
+  const [selectedGrade, setSelectedGrade] = useState<string>("");
 
   useEffect(() => {
     if (!isLoggedIn || userRole !== "professor") {
@@ -64,13 +81,37 @@ const AllLectures = () => {
     }
   }, [isLoggedIn, navigate, userRole]);
 
+  const filteredLectures = selectedGrade
+    ? allLectures.filter(lecture => lecture.grade === selectedGrade)
+    : allLectures;
+
   return (
     <div className="min-h-screen bg-sarathi-dark text-white">
       <NavBar />
       <main className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">All Uploaded Lectures</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold">All Uploaded Lectures</h1>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Filter size={20} className="text-muted-foreground" />
+              <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by grade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Grades</SelectItem>
+                  {grades.map((grade) => (
+                    <SelectItem key={grade} value={grade}>
+                      {grade} Grade
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
         <div className="grid gap-4">
-          {allLectures.map((lecture) => (
+          {filteredLectures.map((lecture) => (
             <Card key={lecture.id} className="bg-sarathi-darkCard border-sarathi-gray/30 p-4">
               <div className="flex gap-4">
                 <div className="h-16 w-28 overflow-hidden rounded-lg flex-shrink-0 relative">
@@ -89,7 +130,12 @@ const AllLectures = () => {
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium line-clamp-1">{lecture.title}</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium line-clamp-1">{lecture.title}</h3>
+                    <Badge variant="secondary" className="text-xs">
+                      {lecture.grade} Grade
+                    </Badge>
+                  </div>
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-xs text-muted-foreground">
                       {lecture.isLive ? "Streaming now" : `Uploaded on ${lecture.date}`}
