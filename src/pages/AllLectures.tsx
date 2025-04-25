@@ -73,7 +73,7 @@ const grades = [
 const AllLectures = () => {
   const navigate = useNavigate();
   const { isLoggedIn, userRole } = useAuth();
-  const [selectedGrade, setSelectedGrade] = useState<string | "all">("all");
+  const [selectedGrade, setSelectedGrade] = useState<string>("all");
 
   useEffect(() => {
     if (!isLoggedIn || userRole !== "professor") {
