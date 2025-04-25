@@ -8,7 +8,7 @@ import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/App";
 import { BatchSelector } from "@/components/BatchSelector";
 
-// Mock data
+// Mock data with grade information
 const recentLectures = [
   {
     id: 1,
@@ -18,6 +18,7 @@ const recentLectures = [
     progress: 30,
     thumbnail: "https://placehold.co/400x225/1a237e/ffffff?text=Physics",
     isDownloaded: false,
+    grade: "4th",
   },
   {
     id: 2,
@@ -27,6 +28,7 @@ const recentLectures = [
     progress: 75,
     thumbnail: "https://placehold.co/400x225/26a69a/ffffff?text=Mathematics",
     isDownloaded: true,
+    grade: "5th",
   },
   {
     id: 3,
@@ -36,6 +38,7 @@ const recentLectures = [
     progress: 0,
     thumbnail: "https://placehold.co/400x225/1a237e/ffffff?text=Chemistry",
     isDownloaded: false,
+    grade: "4th",
   },
 ];
 
@@ -72,6 +75,11 @@ const StudentDashboard = () => {
     }
   }, [isLoggedIn, navigate, userRole]);
 
+  // Filter lectures based on selected grade
+  const filteredLectures = recentLectures.filter(
+    (lecture) => lecture.grade === selectedGrade
+  );
+
   return (
     <div className="min-h-screen bg-sarathi-dark text-white">
       <NavBar />
@@ -96,7 +104,7 @@ const StudentDashboard = () => {
           </div>
           
           <div className="grid gap-4">
-            {recentLectures.map((lecture) => (
+            {filteredLectures.map((lecture) => (
               <div key={lecture.id} className="sarathi-card">
                 <div className="flex gap-4">
                   <div className="relative h-20 w-32 overflow-hidden rounded-lg">
