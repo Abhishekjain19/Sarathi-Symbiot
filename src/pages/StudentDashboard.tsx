@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Play, BarChart3, Download, Clock, ChevronRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/App";
+import { BatchSelector } from "@/components/BatchSelector";
 
 // Mock data
 const recentLectures = [
@@ -63,6 +64,7 @@ const progressStats = [
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const { isLoggedIn, userRole } = useAuth();
+  const [selectedGrade, setSelectedGrade] = useState<string>("4th");
 
   useEffect(() => {
     if (!isLoggedIn || userRole !== "student") {
@@ -76,6 +78,10 @@ const StudentDashboard = () => {
       
       <main className="container mx-auto px-4 py-6 pb-20">
         <h1 className="text-2xl font-bold mb-6">Welcome, Student</h1>
+        <BatchSelector 
+          selectedGrade={selectedGrade} 
+          onGradeChange={setSelectedGrade}
+        />
         
         {/* Continue Learning */}
         <section className="mb-8">
