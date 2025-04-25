@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Upload, Play, Calendar, Users, BarChart3, Clock } from "lucide-react";
@@ -102,7 +101,7 @@ const ProfessorDashboard = () => {
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-medium">Your Lectures</h2>
-            <Link to="/lecture/latest" className="text-sm text-secondary">
+            <Link to="/lectures/all" className="text-sm text-secondary">
               See all
             </Link>
           </div>
