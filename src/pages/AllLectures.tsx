@@ -1,13 +1,14 @@
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Play } from "lucide-react";
+import { Users, Play, Circle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/App";
 import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 // Mock data - Replace with actual data later
 const allLectures = [
@@ -17,6 +18,7 @@ const allLectures = [
     views: 56,
     date: "22 Apr",
     thumbnail: "https://placehold.co/400x225/1a237e/ffffff?text=Physics",
+    isLive: true,
   },
   {
     id: 2,
@@ -24,6 +26,7 @@ const allLectures = [
     views: 42,
     date: "20 Apr",
     thumbnail: "https://placehold.co/400x225/26a69a/ffffff?text=Mathematics",
+    isLive: false,
   },
   {
     id: 3,
@@ -31,6 +34,7 @@ const allLectures = [
     views: 24,
     date: "15 Apr",
     thumbnail: "https://placehold.co/400x225/1a237e/ffffff?text=Chemistry",
+    isLive: true,
   },
   {
     id: 4,
@@ -38,6 +42,7 @@ const allLectures = [
     views: 31,
     date: "10 Apr",
     thumbnail: "https://placehold.co/400x225/1a237e/ffffff?text=Physics",
+    isLive: false,
   },
   {
     id: 5,
@@ -45,6 +50,7 @@ const allLectures = [
     views: 28,
     date: "5 Apr",
     thumbnail: "https://placehold.co/400x225/1a237e/ffffff?text=Chemistry",
+    isLive: false,
   }
 ];
 
@@ -67,18 +73,26 @@ const AllLectures = () => {
           {allLectures.map((lecture) => (
             <Card key={lecture.id} className="bg-sarathi-darkCard border-sarathi-gray/30 p-4">
               <div className="flex gap-4">
-                <div className="h-16 w-28 overflow-hidden rounded-lg flex-shrink-0">
+                <div className="h-16 w-28 overflow-hidden rounded-lg flex-shrink-0 relative">
                   <img 
                     src={lecture.thumbnail} 
                     alt={lecture.title} 
                     className="h-full w-full object-cover"
                   />
+                  {lecture.isLive && (
+                    <div className="absolute top-1 left-1">
+                      <Badge variant="destructive" className="flex items-center gap-1">
+                        <Circle size={8} className="fill-current animate-pulse" />
+                        LIVE
+                      </Badge>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1">
                   <h3 className="font-medium line-clamp-1">{lecture.title}</h3>
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-xs text-muted-foreground">
-                      Uploaded on {lecture.date}
+                      {lecture.isLive ? "Streaming now" : `Uploaded on ${lecture.date}`}
                     </p>
                     <p className="text-xs flex items-center">
                       <Users size={12} className="mr-1" />

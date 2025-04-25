@@ -69,7 +69,9 @@ export const NavBar = () => {
           <div className="container mx-auto px-4 py-6 flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <NavLink to={getDashboardLink()} icon={User} label="Dashboard" />
-              <NavLink to="/lecture/latest" icon={BookOpen} label="Lectures" />
+              {userRole === "professor" && (
+                <NavLink to="/lectures/all" icon={BookOpen} label="My Lectures" />
+              )}
               <NavLink to="/maps" icon={Map} label="Find Centers" />
               <NavLink to="/assessment/1" icon={BarChart} label="Assessments" />
             </div>
