@@ -10,6 +10,13 @@ import { useAuth } from "@/App";
 
 type IdeaBadge = "innovator" | "creative" | "solver" | "leader" | "contributor";
 
+type Feedback = {
+  id: number;
+  professorName: string;
+  content: string;
+  createdAt: string;
+};
+
 type Idea = {
   id: number;
   title: string;
@@ -20,6 +27,7 @@ type Idea = {
   mediaUrl?: string;
   featured: boolean;
   badges: IdeaBadge[];
+  feedback?: Feedback[];
 };
 
 const mockIdeas: Idea[] = [
@@ -33,6 +41,14 @@ const mockIdeas: Idea[] = [
     mediaUrl: "https://placehold.co/600x400/1a237e/ffffff?text=Solar+Purifier+Concept",
     featured: true,
     badges: ["innovator", "solver"],
+    feedback: [
+      {
+        id: 1,
+        professorName: "Dr. Ravi Kumar",
+        content: "Excellent initiative! Consider adding a filter maintenance schedule to ensure long-term sustainability.",
+        createdAt: "2025-04-25T14:30:00Z"
+      }
+    ]
   },
   {
     id: 2,
@@ -230,6 +246,24 @@ export const CommunityFeed = () => {
                       className="w-full h-full object-cover"
                     />
                   )}
+                </div>
+              )}
+
+              {idea.feedback && idea.feedback.length > 0 && (
+                <div className="mt-4 border-t border-sarathi-gray/30 pt-4 space-y-3">
+                  <h4 className="text-sm font-medium text-muted-foreground">Professor Feedback</h4>
+                  {idea.feedback.map((feedback) => (
+                    <div key={feedback.id} className="bg-sarathi-gray/10 rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <MessageSquare size={14} className="text-primary" />
+                        <span className="text-sm font-medium">{feedback.professorName}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(feedback.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-sm">{feedback.content}</p>
+                    </div>
+                  ))}
                 </div>
               )}
 
