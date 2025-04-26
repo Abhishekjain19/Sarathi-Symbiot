@@ -1,12 +1,13 @@
-
 import { useState, useEffect } from "react";
-import { Search, Star, Award, Badge, Video } from "lucide-react";
+import { Search, Star, Award, Badge, Video, MessageSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge as UIBadge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/App";
 
-// Types for ideas and badges
 type IdeaBadge = "innovator" | "creative" | "solver" | "leader" | "contributor";
 
 type Idea = {
@@ -21,7 +22,6 @@ type Idea = {
   badges: IdeaBadge[];
 };
 
-// Mock data - in a real app this would come from an API
 const mockIdeas: Idea[] = [
   {
     id: 1,
@@ -79,7 +79,6 @@ const mockIdeas: Idea[] = [
   },
 ];
 
-// Badge icon mapping
 const badgeIcons = {
   innovator: Star,
   creative: Award, 
@@ -106,17 +105,17 @@ const badgeColors = {
 
 export const CommunityFeed = () => {
   const { userRole } = useAuth();
+  const { toast } = useToast();
   const [ideas, setIdeas] = useState<Idea[]>(mockIdeas);
   const [searchQuery, setSearchQuery] = useState("");
+  const [feedbackDrafts, setFeedbackDrafts] = useState<{ [key: number]: string }>({});
 
-  // Filter ideas based on search query
   const filteredIdeas = ideas.filter(idea => 
     idea.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     idea.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     idea.studentName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Sort ideas - featured first, then by date (newest first)
   const sortedIdeas = [...filteredIdeas].sort((a, b) => {
     if (a.featured && !b.featured) return -1;
     if (!a.featured && b.featured) return 1;
@@ -126,6 +125,22 @@ export const CommunityFeed = () => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  const handleFeedbackSubmit = (ideaId: number) => {
+    const feedback = feedbackDrafts[ideaId];
+    if (!feedback?.trim()) return;
+
+    toast({
+      title: "Feedback submitted",
+      description: "Your feedback has been sent to the student.",
+    });
+
+    setFeedbackDrafts((prev) => {
+      const newDrafts = { ...prev };
+      delete newDrafts[ideaId];
+      return newDrafts;
+    });
   };
 
   return (
@@ -203,7 +218,7 @@ export const CommunityFeed = () => {
               <p className="text-sm mb-4">{idea.description}</p>
               
               {idea.mediaUrl && (
-                <div className="rounded-lg overflow-hidden mb-2 max-h-[300px]">
+                <div className="rounded-lg overflow-hidden mb-4 max-h-[300px]">
                   {idea.mediaUrl.includes('video') ? (
                     <div className="bg-black/20 h-[200px] flex items-center justify-center">
                       <Video size={40} />
@@ -215,6 +230,30 @@ export const CommunityFeed = () => {
                       className="w-full h-full object-cover"
                     />
                   )}
+                </div>
+              )}
+
+              {userRole === "professor" && (
+                <div className="mt-4 border-t border-sarathi-gray/30 pt-4">
+                  <div className="flex items-start gap-2">
+                    <Textarea
+                      placeholder="Add your feedback to help the student improve..."
+                      value={feedbackDrafts[idea.id] || ""}
+                      onChange={(e) => setFeedbackDrafts(prev => ({
+                        ...prev,
+                        [idea.id]: e.target.value
+                      }))}
+                      className="min-h-[80px] bg-sarathi-darkCard border-sarathi-gray/30"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleFeedbackSubmit(idea.id)}
+                      className="shrink-0"
+                    >
+                      <MessageSquare className="mr-2" size={16} />
+                      Send
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
