@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +20,8 @@ import LearningHistory from "./pages/LearningHistory";
 import SubjectLectures from "./pages/SubjectLectures";
 import AssignmentsPage from "./pages/AssignmentsPage";
 import AllLectures from "./pages/AllLectures";
+import SrijanIdeaHub from "./pages/SrijanIdeaHub";
+import SrijanAdmin from "./pages/SrijanAdmin";
 
 // Types
 type UserRole = "student" | "professor" | "ngo" | null;
@@ -66,6 +69,8 @@ const App = () => {
               <Route path="/learning/:subject" element={<SubjectLectures />} />
               <Route path="/learning/assignments/:subject" element={<AssignmentsPage />} />
               <Route path="/lectures/all" element={<AllLectures />} />
+              <Route path="/srijan" element={<SrijanIdeaHub />} />
+              <Route path="/srijan-admin" element={<SrijanAdmin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
