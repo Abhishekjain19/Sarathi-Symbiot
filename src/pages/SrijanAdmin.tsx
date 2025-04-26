@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Flag, Star, Edit, X, Plus, CheckCheck } from "lucide-react";
+import { Flag, Star, Edit, X, Plus, CheckCheck, Shield } from "lucide-react";
 import { NavBar } from "@/components/NavBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,6 +48,43 @@ const challenges = [
   },
 ];
 
+// Simple AI moderation function
+const analyzeSentiment = (text: string) => {
+  // List of words to check against
+  const inappropriateWords = ['spam', 'offensive', 'inappropriate', 'hate', 'violent'];
+  const commercialWords = ['buy now', 'discount', 'offer', 'sale', 'promotion'];
+  
+  const hasInappropriate = inappropriateWords.some(word => 
+    text.toLowerCase().includes(word)
+  );
+  
+  const hasCommercial = commercialWords.some(word => 
+    text.toLowerCase().includes(word)
+  );
+  
+  if (hasInappropriate) {
+    return {
+      status: 'rejected',
+      reason: 'Content contains inappropriate language',
+      confidence: 0.85
+    };
+  }
+  
+  if (hasCommercial) {
+    return {
+      status: 'flagged',
+      reason: 'Potential commercial/spam content',
+      confidence: 0.75
+    };
+  }
+  
+  return {
+    status: 'approved',
+    reason: 'Content appears appropriate',
+    confidence: 0.95
+  };
+};
+
 const SrijanAdmin = () => {
   const navigate = useNavigate();
   const { isLoggedIn, userRole } = useAuth();
@@ -74,7 +110,7 @@ const SrijanAdmin = () => {
           value={activeTab}
           onValueChange={setActiveTab}
         >
-          <TabsList className="grid grid-cols-2 mb-6">
+          <TabsList className="grid grid-cols-3 mb-6">
             <TabsTrigger value="moderation">
               <Flag className="mr-2" size={16} />
               Content Moderation
@@ -82,6 +118,10 @@ const SrijanAdmin = () => {
             <TabsTrigger value="challenges">
               <Star className="mr-2" size={16} />
               Weekly Challenges
+            </TabsTrigger>
+            <TabsTrigger value="ai-analysis">
+              <Shield className="mr-2" size={16} />
+              AI Analysis
             </TabsTrigger>
           </TabsList>
           
@@ -190,6 +230,67 @@ const SrijanAdmin = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="ai-analysis">
+            <h2 className="text-lg font-semibold mb-4">AI Content Analysis</h2>
+            
+            <div className="space-y-4">
+              {flaggedIdeas.map((idea) => {
+                const analysis = analyzeSentiment(idea.description);
+                const statusColors = {
+                  approved: 'bg-green-500/20 text-green-500',
+                  flagged: 'bg-yellow-500/20 text-yellow-500',
+                  rejected: 'bg-red-500/20 text-red-500'
+                };
+                
+                return (
+                  <Card key={idea.id} className="bg-sarathi-darkCard border-sarathi-gray/30">
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between">
+                        <CardTitle className="text-base">{idea.title}</CardTitle>
+                        <Badge className={statusColors[analysis.status as keyof typeof statusColors]}>
+                          {analysis.status.charAt(0).toUpperCase() + analysis.status.slice(1)}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        By {idea.studentName} • {new Date(idea.createdAt).toLocaleDateString()}
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm mb-2">{idea.description}</p>
+                      <div className="text-sm space-y-2">
+                        <p className="text-muted-foreground">
+                          AI Analysis: {analysis.reason}
+                        </p>
+                        <p className="text-muted-foreground">
+                          Confidence: {(analysis.confidence * 100).toFixed(1)}%
+                        </p>
+                      </div>
+                      
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          className="flex items-center"
+                        >
+                          <X size={16} className="mr-1" />
+                          Override & Reject
+                        </Button>
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="flex items-center"
+                        >
+                          <CheckCheck size={16} className="mr-1" />
+                          Override & Approve
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </TabsContent>
         </Tabs>
