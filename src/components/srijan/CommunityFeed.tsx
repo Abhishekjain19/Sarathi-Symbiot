@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/App";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type IdeaBadge = "innovator" | "creative" | "solver" | "leader" | "contributor";
 
@@ -125,6 +126,7 @@ export const CommunityFeed = () => {
   const [ideas, setIdeas] = useState<Idea[]>(mockIdeas);
   const [searchQuery, setSearchQuery] = useState("");
   const [feedbackDrafts, setFeedbackDrafts] = useState<{ [key: number]: string }>({});
+  const [activeTab, setActiveTab] = useState("all");
 
   const filteredIdeas = ideas.filter(idea => 
     idea.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -159,6 +161,122 @@ export const CommunityFeed = () => {
     });
   };
 
+  const renderIdeaCard = (idea: Idea, showFeedback: boolean = false) => (
+    <Card 
+      key={idea.id} 
+      className={`bg-sarathi-darkCard border-sarathi-gray/30 ${idea.featured ? 'border-l-4 border-l-primary' : ''}`}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start gap-2">
+          <div>
+            <CardTitle className="text-lg">
+              {idea.title}
+              {idea.featured && (
+                <UIBadge className="ml-2 bg-primary/20 text-primary hover:bg-primary/30">Featured</UIBadge>
+              )}
+            </CardTitle>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <span className="text-sm text-muted-foreground">
+                By {idea.studentName} • {formatDate(idea.createdAt)}
+              </span>
+              {idea.badges.map((badge) => {
+                const BadgeIcon = badgeIcons[badge];
+                return (
+                  <UIBadge
+                    key={badge}
+                    variant="outline"
+                    className={badgeColors[badge]}
+                  >
+                    <BadgeIcon size={12} className="mr-1" />
+                    {badgeLabels[badge]}
+                  </UIBadge>
+                );
+              })}
+            </div>
+          </div>
+
+          {userRole === "ngo" && (
+            <div className="flex gap-2">
+              <UIBadge 
+                variant="outline" 
+                className="cursor-pointer bg-green-500/10 text-green-500 hover:bg-green-500/20"
+              >
+                Approve
+              </UIBadge>
+              <UIBadge 
+                variant="outline"
+                className="cursor-pointer bg-red-500/10 text-red-500 hover:bg-red-500/20"
+              >
+                Reject
+              </UIBadge>
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm mb-4">{idea.description}</p>
+        
+        {idea.mediaUrl && (
+          <div className="rounded-lg overflow-hidden mb-4 max-h-[300px]">
+            {idea.mediaUrl.includes('video') ? (
+              <div className="bg-black/20 h-[200px] flex items-center justify-center">
+                <Video size={40} />
+              </div>
+            ) : (
+              <img 
+                src={idea.mediaUrl} 
+                alt={idea.title}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+        )}
+
+        {showFeedback && idea.feedback && idea.feedback.length > 0 && (
+          <div className="mt-4 border-t border-sarathi-gray/30 pt-4 space-y-3">
+            <h4 className="text-sm font-medium text-muted-foreground">Professor Feedback</h4>
+            {idea.feedback.map((feedback) => (
+              <div key={feedback.id} className="bg-sarathi-gray/10 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <MessageSquare size={14} className="text-primary" />
+                  <span className="text-sm font-medium">{feedback.professorName}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(feedback.createdAt)}
+                  </span>
+                </div>
+                <p className="text-sm">{feedback.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {userRole === "professor" && (
+          <div className="mt-4 border-t border-sarathi-gray/30 pt-4">
+            <div className="flex items-start gap-2">
+              <Textarea
+                placeholder="Add your feedback to help the student improve..."
+                value={feedbackDrafts[idea.id] || ""}
+                onChange={(e) => setFeedbackDrafts(prev => ({
+                  ...prev,
+                  [idea.id]: e.target.value
+                }))}
+                className="min-h-[80px] bg-sarathi-darkCard border-sarathi-gray/30"
+              />
+              <Button
+                size="sm"
+                onClick={() => handleFeedbackSubmit(idea.id)}
+                className="shrink-0"
+              >
+                <MessageSquare className="mr-2" size={16} />
+                Send
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-6">
       <div className="relative">
@@ -171,128 +289,51 @@ export const CommunityFeed = () => {
         />
       </div>
 
-      {sortedIdeas.length === 0 ? (
-        <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <p className="text-muted-foreground">No ideas found matching your search.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        sortedIdeas.map((idea) => (
-          <Card 
-            key={idea.id} 
-            className={`bg-sarathi-darkCard border-sarathi-gray/30 ${idea.featured ? 'border-l-4 border-l-primary' : ''}`}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start gap-2">
-                <div>
-                  <CardTitle className="text-lg">
-                    {idea.title}
-                    {idea.featured && (
-                      <UIBadge className="ml-2 bg-primary/20 text-primary hover:bg-primary/30">Featured</UIBadge>
-                    )}
-                  </CardTitle>
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <span className="text-sm text-muted-foreground">
-                      By {idea.studentName} • {formatDate(idea.createdAt)}
-                    </span>
-                    {idea.badges.map((badge) => {
-                      const BadgeIcon = badgeIcons[badge];
-                      return (
-                        <UIBadge
-                          key={badge}
-                          variant="outline"
-                          className={badgeColors[badge]}
-                        >
-                          <BadgeIcon size={12} className="mr-1" />
-                          {badgeLabels[badge]}
-                        </UIBadge>
-                      );
-                    })}
-                  </div>
-                </div>
+      {userRole === "student" && (
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="all">All Posts</TabsTrigger>
+            <TabsTrigger value="my-posts">My Posts</TabsTrigger>
+          </TabsList>
 
-                {userRole === "ngo" && (
-                  <div className="flex gap-2">
-                    <UIBadge 
-                      variant="outline" 
-                      className="cursor-pointer bg-green-500/10 text-green-500 hover:bg-green-500/20"
-                    >
-                      Approve
-                    </UIBadge>
-                    <UIBadge 
-                      variant="outline"
-                      className="cursor-pointer bg-red-500/10 text-red-500 hover:bg-red-500/20"
-                    >
-                      Reject
-                    </UIBadge>
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm mb-4">{idea.description}</p>
-              
-              {idea.mediaUrl && (
-                <div className="rounded-lg overflow-hidden mb-4 max-h-[300px]">
-                  {idea.mediaUrl.includes('video') ? (
-                    <div className="bg-black/20 h-[200px] flex items-center justify-center">
-                      <Video size={40} />
-                    </div>
-                  ) : (
-                    <img 
-                      src={idea.mediaUrl} 
-                      alt={idea.title}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </div>
-              )}
+          <TabsContent value="all" className="mt-6">
+            {sortedIdeas.length === 0 ? (
+              <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
+                <CardContent className="flex flex-col items-center justify-center py-8">
+                  <p className="text-muted-foreground">No ideas found matching your search.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              sortedIdeas.map(idea => renderIdeaCard(idea, false))
+            )}
+          </TabsContent>
 
-              {idea.feedback && idea.feedback.length > 0 && (
-                <div className="mt-4 border-t border-sarathi-gray/30 pt-4 space-y-3">
-                  <h4 className="text-sm font-medium text-muted-foreground">Professor Feedback</h4>
-                  {idea.feedback.map((feedback) => (
-                    <div key={feedback.id} className="bg-sarathi-gray/10 rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <MessageSquare size={14} className="text-primary" />
-                        <span className="text-sm font-medium">{feedback.professorName}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(feedback.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-sm">{feedback.content}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
+          <TabsContent value="my-posts" className="mt-6">
+            {sortedIdeas.filter(idea => idea.studentId === 1).length === 0 ? (
+              <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
+                <CardContent className="flex flex-col items-center justify-center py-8">
+                  <p className="text-muted-foreground">You haven't posted any ideas yet.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              sortedIdeas
+                .filter(idea => idea.studentId === 1)
+                .map(idea => renderIdeaCard(idea, true))
+            )}
+          </TabsContent>
+        </Tabs>
+      )}
 
-              {userRole === "professor" && (
-                <div className="mt-4 border-t border-sarathi-gray/30 pt-4">
-                  <div className="flex items-start gap-2">
-                    <Textarea
-                      placeholder="Add your feedback to help the student improve..."
-                      value={feedbackDrafts[idea.id] || ""}
-                      onChange={(e) => setFeedbackDrafts(prev => ({
-                        ...prev,
-                        [idea.id]: e.target.value
-                      }))}
-                      className="min-h-[80px] bg-sarathi-darkCard border-sarathi-gray/30"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => handleFeedbackSubmit(idea.id)}
-                      className="shrink-0"
-                    >
-                      <MessageSquare className="mr-2" size={16} />
-                      Send
-                    </Button>
-                  </div>
-                </div>
-              )}
+      {userRole !== "student" && (
+        sortedIdeas.length === 0 ? (
+          <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <p className="text-muted-foreground">No ideas found matching your search.</p>
             </CardContent>
           </Card>
-        ))
+        ) : (
+          sortedIdeas.map(idea => renderIdeaCard(idea, userRole === "professor"))
+        )
       )}
     </div>
   );
