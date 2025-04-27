@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, MapPin, School, Wifi, Info, Search } from "lucide-react";
@@ -7,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/App";
+import { AddCenterForm } from "@/components/AddCenterForm";
 
 // Mock map image URL
 const mapImageUrl = "https://placehold.co/800x600/1a237e/ffffff?text=Map+View";
@@ -76,7 +76,10 @@ const MapPage = () => {
           <span>Back</span>
         </button>
         
-        <h1 className="text-2xl font-bold mb-4">Find Learning Centers</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Find Learning Centers</h1>
+          <AddCenterForm />
+        </div>
         
         {/* Search Bar */}
         <div className="relative mb-4">
