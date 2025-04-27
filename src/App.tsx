@@ -22,6 +22,7 @@ import AssignmentsPage from "./pages/AssignmentsPage";
 import AllLectures from "./pages/AllLectures";
 import SrijanIdeaHub from "./pages/SrijanIdeaHub";
 import SrijanAdmin from "./pages/SrijanAdmin";
+import GyaanSetuPage from "./pages/GyaanSetuPage";
 
 // Types
 type UserRole = "student" | "professor" | "ngo" | null;
@@ -71,6 +72,7 @@ const App = () => {
               <Route path="/lectures/all" element={<AllLectures />} />
               <Route path="/srijan" element={<SrijanIdeaHub />} />
               <Route path="/srijan-admin" element={<SrijanAdmin />} />
+              <Route path="/gyaansetu" element={<GyaanSetuPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
