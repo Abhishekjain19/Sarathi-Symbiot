@@ -1,15 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, MapPin, School, Wifi, Info, Search } from "lucide-react";
+import { ChevronLeft, MapPin, School, Wifi, Info, Search, Locate } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/App";
 import { AddCenterForm } from "@/components/AddCenterForm";
-
-// Mock map image URL
-const mapImageUrl = "https://placehold.co/800x600/1a237e/ffffff?text=Map+View";
+import { Separator } from "@/components/ui/separator";
 
 // Mock centers data
 const centerLocations = [
@@ -47,6 +46,7 @@ const MapPage = () => {
   const { isLoggedIn } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCenter, setSelectedCenter] = useState<number | null>(null);
+  const [showGoogleMap, setShowGoogleMap] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -92,40 +92,78 @@ const MapPage = () => {
           />
         </div>
         
+        {/* Map View Toggle */}
+        <div className="mb-4 flex gap-2">
+          <Button 
+            variant={!showGoogleMap ? "secondary" : "outline"}
+            onClick={() => setShowGoogleMap(false)}
+            className="flex gap-2 items-center"
+          >
+            <MapPin size={16} />
+            Schematic View
+          </Button>
+          <Button 
+            variant={showGoogleMap ? "secondary" : "outline"}
+            onClick={() => setShowGoogleMap(true)}
+            className="flex gap-2 items-center"
+          >
+            <Locate size={16} />
+            Google Maps View
+          </Button>
+        </div>
+        
         {/* Map and List View */}
         <div className="grid md:grid-cols-5 gap-4">
           {/* Map View */}
-          <div className="md:col-span-3 h-[400px] md:h-[600px] rounded-xl overflow-hidden relative">
-            <img 
-              src={mapImageUrl} 
-              alt="Map view" 
-              className="w-full h-full object-cover"
-            />
-            {/* Map Pins - In a real implementation, these would be positioned based on coordinates */}
-            <div className="absolute top-[30%] left-[40%] transform -translate-x-1/2 -translate-y-1/2">
-              <button 
-                className="bg-primary p-2 rounded-full hover:bg-primary/80 transition-colors"
-                onClick={() => setSelectedCenter(1)}
-              >
-                <Wifi size={16} />
-              </button>
-            </div>
-            <div className="absolute top-[50%] left-[60%] transform -translate-x-1/2 -translate-y-1/2">
-              <button 
-                className="bg-secondary p-2 rounded-full hover:bg-secondary/80 transition-colors"
-                onClick={() => setSelectedCenter(2)}
-              >
-                <School size={16} />
-              </button>
-            </div>
-            <div className="absolute top-[70%] left-[50%] transform -translate-x-1/2 -translate-y-1/2">
-              <button 
-                className="bg-primary p-2 rounded-full hover:bg-primary/80 transition-colors"
-                onClick={() => setSelectedCenter(3)}
-              >
-                <Wifi size={16} />
-              </button>
-            </div>
+          <div className="md:col-span-3 h-[400px] md:h-[600px] rounded-xl overflow-hidden relative bg-sarathi-darkCard border border-sarathi-gray/30">
+            {showGoogleMap ? (
+              <div className="w-full h-full">
+                <iframe 
+                  src="https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d622.7072322075145!2d77.521654!3d13.0116666!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e0!4m3!3m2!1d13.0116945!2d77.5220557!4m3!3m2!1d13.0119921!2d77.5221362!4m3!3m2!1d13.0117565!2d77.5214722!5e0!3m2!1sen!2sin!4v1714459532005!5m2!1sen!2sin" 
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Google Maps - Nearby Learning Centers"
+                  className="w-full h-full"
+                />
+              </div>
+            ) : (
+              <>
+                <img 
+                  src="https://placehold.co/800x600/1a237e/ffffff?text=Map+View" 
+                  alt="Map view" 
+                  className="w-full h-full object-cover"
+                />
+                {/* Map Pins - In a real implementation, these would be positioned based on coordinates */}
+                <div className="absolute top-[30%] left-[40%] transform -translate-x-1/2 -translate-y-1/2">
+                  <button 
+                    className="bg-primary p-2 rounded-full hover:bg-primary/80 transition-colors"
+                    onClick={() => setSelectedCenter(1)}
+                  >
+                    <Wifi size={16} />
+                  </button>
+                </div>
+                <div className="absolute top-[50%] left-[60%] transform -translate-x-1/2 -translate-y-1/2">
+                  <button 
+                    className="bg-secondary p-2 rounded-full hover:bg-secondary/80 transition-colors"
+                    onClick={() => setSelectedCenter(2)}
+                  >
+                    <School size={16} />
+                  </button>
+                </div>
+                <div className="absolute top-[70%] left-[50%] transform -translate-x-1/2 -translate-y-1/2">
+                  <button 
+                    className="bg-primary p-2 rounded-full hover:bg-primary/80 transition-colors"
+                    onClick={() => setSelectedCenter(3)}
+                  >
+                    <Wifi size={16} />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
           
           {/* Centers List */}
