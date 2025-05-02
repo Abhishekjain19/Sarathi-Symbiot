@@ -1,8 +1,8 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { MapPin, School, Wifi, Users, Laptop, Battery, Map as MapIcon } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/NavBar";
@@ -51,6 +51,7 @@ const resourceUtilization = [
 const NgoDashboard = () => {
   const navigate = useNavigate();
   const { isLoggedIn, userRole } = useAuth();
+  const [showMap, setShowMap] = useState<boolean>(false);
 
   useEffect(() => {
     if (!isLoggedIn || userRole !== "ngo") {
@@ -90,6 +91,54 @@ const NgoDashboard = () => {
               </Card>
             ))}
           </div>
+        </section>
+        
+        {/* Centers Map View */}
+        <section className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-medium">Centers Map</h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-2"
+              onClick={() => setShowMap(!showMap)}
+            >
+              <MapPin size={14} />
+              {showMap ? "Hide Map" : "Show Map"}
+            </Button>
+          </div>
+          
+          {showMap && (
+            <Card className="bg-sarathi-darkCard border-sarathi-gray/30 overflow-hidden mb-4">
+              <CardContent className="p-0">
+                <div className="w-full h-[450px]">
+                  <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d622.7072322075145!2d77.521654!3d13.0116666!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e0!4m3!3m2!1d13.0116945!2d77.5220557!4m3!3m2!1d13.0119921!2d77.5221362!4m3!3m2!1d13.0117565!2d77.5214722!5e0!3m2!1sen!2sin!4v1714459532005!5m2!1sen!2sin" 
+                    width="100%" 
+                    height="100%" 
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy" 
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Google Maps - NGO Learning Centers"
+                    className="w-full h-full"
+                  />
+                </div>
+              </CardContent>
+              <CardFooter className="p-3">
+                <div className="flex justify-between items-center w-full">
+                  <p className="text-sm text-muted-foreground">{centerStats[0].value} Active Learning Centers</p>
+                  <Button 
+                    size="sm" 
+                    className="text-xs"
+                    onClick={() => navigate('/maps')}
+                  >
+                    Manage Centers
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          )}
         </section>
         
         {/* Active Centers */}

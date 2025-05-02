@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, MapPin, School, Wifi, Info, Search, Locate } from "lucide-react";
@@ -46,7 +45,7 @@ const MapPage = () => {
   const { isLoggedIn } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCenter, setSelectedCenter] = useState<number | null>(null);
-  const [showGoogleMap, setShowGoogleMap] = useState(false);
+  const [showGoogleMap, setShowGoogleMap] = useState(true); // Default to Google Maps view
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -131,38 +130,46 @@ const MapPage = () => {
                 />
               </div>
             ) : (
-              <>
-                <img 
-                  src="https://placehold.co/800x600/1a237e/ffffff?text=Map+View" 
-                  alt="Map view" 
-                  className="w-full h-full object-cover"
+              <div className="w-full h-full">
+                <iframe 
+                  src="https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d622.7072322075145!2d77.521654!3d13.0116666!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e0!4m3!3m2!1d13.0116945!2d77.5220557!4m3!3m2!1d13.0119921!2d77.5221362!4m3!3m2!1d13.0117565!2d77.5214722!5e0!3m2!1sen!2sin!4v1714459532005!5m2!1sen!2sin" 
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Schematic Map View - Learning Centers"
+                  className="w-full h-full"
                 />
-                {/* Map Pins - In a real implementation, these would be positioned based on coordinates */}
-                <div className="absolute top-[30%] left-[40%] transform -translate-x-1/2 -translate-y-1/2">
-                  <button 
-                    className="bg-primary p-2 rounded-full hover:bg-primary/80 transition-colors"
-                    onClick={() => setSelectedCenter(1)}
-                  >
-                    <Wifi size={16} />
-                  </button>
+                {/* Map Pins overlay - keep these on top of the iframe */}
+                <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                  <div className="absolute top-[30%] left-[40%]">
+                    <button 
+                      className="bg-primary p-2 rounded-full hover:bg-primary/80 transition-colors pointer-events-auto"
+                      onClick={() => setSelectedCenter(1)}
+                    >
+                      <Wifi size={16} />
+                    </button>
+                  </div>
+                  <div className="absolute top-[50%] left-[60%]">
+                    <button 
+                      className="bg-secondary p-2 rounded-full hover:bg-secondary/80 transition-colors pointer-events-auto"
+                      onClick={() => setSelectedCenter(2)}
+                    >
+                      <School size={16} />
+                    </button>
+                  </div>
+                  <div className="absolute top-[70%] left-[50%]">
+                    <button 
+                      className="bg-primary p-2 rounded-full hover:bg-primary/80 transition-colors pointer-events-auto"
+                      onClick={() => setSelectedCenter(3)}
+                    >
+                      <Wifi size={16} />
+                    </button>
+                  </div>
                 </div>
-                <div className="absolute top-[50%] left-[60%] transform -translate-x-1/2 -translate-y-1/2">
-                  <button 
-                    className="bg-secondary p-2 rounded-full hover:bg-secondary/80 transition-colors"
-                    onClick={() => setSelectedCenter(2)}
-                  >
-                    <School size={16} />
-                  </button>
-                </div>
-                <div className="absolute top-[70%] left-[50%] transform -translate-x-1/2 -translate-y-1/2">
-                  <button 
-                    className="bg-primary p-2 rounded-full hover:bg-primary/80 transition-colors"
-                    onClick={() => setSelectedCenter(3)}
-                  >
-                    <Wifi size={16} />
-                  </button>
-                </div>
-              </>
+              </div>
             )}
           </div>
           
