@@ -44,7 +44,7 @@ export const NavBar = () => {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <Link to={getDashboardLink()} className="flex items-center">
-            <span className="text-xl font-bold text-primary">सारथी</span>
+            <span className="text-xl font-bold text-primary">Navigator</span>
             <span className="ml-2 text-xs font-medium bg-secondary px-2 py-0.5 rounded-md text-secondary-foreground">
               Beta
             </span>
@@ -74,10 +74,10 @@ export const NavBar = () => {
               )}
               <NavLink to="/maps" icon={Map} label="Find Centers" />
               <NavLink to="/assessment/1" icon={BarChart} label="Assessments" />
-              <NavLink to="/srijan" icon={Star} label="Srijan Idea Hub" />
-              <NavLink to="/gyaansetu" icon={MessageCircle} label="GyaanSetu AI" />
+              <NavLink to="/srijan" icon={Star} label="Ideas Hub" />
+              <NavLink to="/gyaansetu" icon={MessageCircle} label="AI Assistant" />
               {userRole === "ngo" && (
-                <NavLink to="/srijan-admin" icon={Star} label="Srijan Admin" />
+                <NavLink to="/srijan-admin" icon={Star} label="Ideas Admin" />
               )}
             </div>
             

@@ -82,7 +82,7 @@ const Landing = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent rounded-full blur-3xl transform -translate-y-1/2" />
           <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-white via-primary/80 to-secondary bg-clip-text text-transparent">
-            सारथी
+            Navigator
           </h1>
           <p className="text-2xl md:text-3xl font-light mb-8 tracking-wide">
             Bridging the Educational Gap
