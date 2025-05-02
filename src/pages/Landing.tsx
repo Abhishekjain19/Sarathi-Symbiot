@@ -1,30 +1,32 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { UserRound, GraduationCap, Users } from "lucide-react";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { setUserRole, setIsLoggedIn } = useAuth();
-  const [selectedRole, setSelectedRole] = useState<"student" | "professor" | "ngo" | null>(null);
-
-  const handleLogin = () => {
-    if (!selectedRole) return;
-    setUserRole(selectedRole);
-    setIsLoggedIn(true);
-    
-    if (selectedRole === "student") {
-      navigate("/student-dashboard");
-    } else if (selectedRole === "professor") {
-      navigate("/professor-dashboard");
-    } else {
-      navigate("/ngo-dashboard");
+  const { profile } = useAuth();
+  
+  // Check if user is already logged in, redirect to appropriate dashboard
+  useEffect(() => {
+    if (profile) {
+      if (profile.role === "student") {
+        navigate("/student-dashboard");
+      } else if (profile.role === "professor") {
+        navigate("/professor-dashboard");
+      } else if (profile.role === "ngo") {
+        navigate("/ngo-dashboard");
+      }
     }
+  }, [profile, navigate]);
+
+  const handleRedirect = () => {
+    navigate("/auth");
   };
 
   const RoleCard = ({ 
@@ -48,18 +50,13 @@ const Landing = () => {
       <Card 
         className={cn(
           "relative overflow-hidden backdrop-blur-xl border-2 cursor-pointer transition-all duration-300 hover:scale-[1.02] group",
-          selectedRole === role 
-            ? "border-secondary bg-secondary/10 shadow-lg shadow-secondary/20" 
-            : "border-sarathi-gray/30 bg-sarathi-darkCard/60 hover:border-primary/50"
+          "border-sarathi-gray/30 bg-sarathi-darkCard/60 hover:border-primary/50"
         )}
-        onClick={() => setSelectedRole(role)}
+        onClick={handleRedirect}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="relative p-6 flex flex-col gap-4">
-          <div className={cn(
-            "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
-            selectedRole === role ? "bg-secondary text-white" : "bg-sarathi-gray/30"
-          )}>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-colors bg-sarathi-gray/30">
             <Icon size={24} />
           </div>
           <div>
@@ -100,7 +97,7 @@ const Landing = () => {
           transition={{ delay: 0.3 }}
           className="text-2xl font-medium mb-8 text-center"
         >
-          Continue as
+          Choose your role to get started
         </motion.h2>
         
         <div className="grid md:grid-cols-3 gap-6">
@@ -136,16 +133,10 @@ const Landing = () => {
           className="mt-12 max-w-md mx-auto"
         >
           <Button 
-            className={cn(
-              "w-full h-12 text-lg transition-all duration-300",
-              selectedRole 
-                ? "bg-secondary hover:bg-secondary/90 shadow-lg shadow-secondary/20" 
-                : "bg-sarathi-gray/30 hover:bg-sarathi-gray/40"
-            )}
-            onClick={handleLogin}
-            disabled={!selectedRole}
+            className="w-full h-12 text-lg transition-all duration-300 bg-secondary hover:bg-secondary/90"
+            onClick={handleRedirect}
           >
-            Sign In with Google
+            Sign In or Create Account
           </Button>
           <p className="text-center text-xs text-muted-foreground mt-4">
             By continuing, you agree to our Terms of Service and Privacy Policy

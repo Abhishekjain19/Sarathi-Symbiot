@@ -9,7 +9,292 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      centers: {
+        Row: {
+          battery_level: number | null
+          created_at: string | null
+          id: string
+          internet_status: string | null
+          latitude: number | null
+          location: string
+          longitude: number | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          battery_level?: number | null
+          created_at?: string | null
+          id?: string
+          internet_status?: string | null
+          latitude?: number | null
+          location: string
+          longitude?: number | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          battery_level?: number | null
+          created_at?: string | null
+          id?: string
+          internet_status?: string | null
+          latitude?: number | null
+          location?: string
+          longitude?: number | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      challenges: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string
+          end_date: string
+          id: string
+          start_date: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description: string
+          end_date: string
+          id?: string
+          start_date: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string
+          end_date?: string
+          id?: string
+          start_date?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      ideas: {
+        Row: {
+          challenge_id: string | null
+          created_at: string | null
+          description: string
+          id: string
+          media_url: string | null
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          media_url?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          media_url?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lessons: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          downloads: number | null
+          duration: number | null
+          file_url: string | null
+          grade: string
+          id: string
+          subject: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          downloads?: number | null
+          duration?: number | null
+          file_url?: string | null
+          grade: string
+          id?: string
+          subject: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          downloads?: number | null
+          duration?: number | null
+          file_url?: string | null
+          grade?: string
+          id?: string
+          subject?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          center_id: string | null
+          created_at: string | null
+          first_name: string | null
+          grade: string | null
+          id: string
+          last_name: string | null
+          role: string
+        }
+        Insert: {
+          center_id?: string | null
+          created_at?: string | null
+          first_name?: string | null
+          grade?: string | null
+          id: string
+          last_name?: string | null
+          role: string
+        }
+        Update: {
+          center_id?: string | null
+          created_at?: string | null
+          first_name?: string | null
+          grade?: string | null
+          id?: string
+          last_name?: string | null
+          role?: string
+        }
+        Relationships: []
+      }
+      student_centers: {
+        Row: {
+          center_id: string
+          id: string
+          student_id: string
+        }
+        Insert: {
+          center_id: string
+          id?: string
+          student_id: string
+        }
+        Update: {
+          center_id?: string
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_centers_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_results: {
+        Row: {
+          answers: Json | null
+          completed_at: string | null
+          id: string
+          score: number
+          synced_at: string | null
+          test_id: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          completed_at?: string | null
+          id?: string
+          score: number
+          synced_at?: string | null
+          test_id: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json | null
+          completed_at?: string | null
+          id?: string
+          score?: number
+          synced_at?: string | null
+          test_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_results_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tests: {
+        Row: {
+          answers: Json
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          duration: number
+          grade: string
+          id: string
+          questions: Json
+          subject: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          answers: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration: number
+          grade: string
+          id?: string
+          questions: Json
+          subject: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          answers?: Json
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration?: number
+          grade?: string
+          id?: string
+          questions?: Json
+          subject?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

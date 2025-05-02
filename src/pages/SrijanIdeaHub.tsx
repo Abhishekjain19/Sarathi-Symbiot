@@ -6,32 +6,44 @@ import { IdeaSubmissionForm } from "@/components/srijan/IdeaSubmissionForm";
 import { CommunityFeed } from "@/components/srijan/CommunityFeed";
 import { WeeklyChallengeCard } from "@/components/srijan/WeeklyChallengeCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { useIdeas } from "@/hooks/use-ideas";
 
 const SrijanIdeaHub = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, userRole } = useAuth();
+  const { isLoading, profile } = useAuth();
   const { toast } = useToast();
+  const { 
+    submitIdea, 
+    currentChallenge,
+    isLoadingChallenge,
+    isOnline
+  } = useIdeas();
   const [activeTab, setActiveTab] = useState<string>("feed");
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate("/");
-    }
-  }, [isLoggedIn, navigate]);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-sarathi-dark flex items-center justify-center">
+        <div className="animate-spin rounded-full border-t-4 border-primary border-opacity-50 h-12 w-12"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-sarathi-dark text-white">
       <NavBar />
       
       <main className="container mx-auto px-4 py-6 pb-20">
-        <h1 className="text-2xl font-bold mb-2">Srijan – Student Idea Hub</h1>
+        <h1 className="text-2xl font-bold mb-2">Ideas Hub</h1>
         <p className="text-muted-foreground mb-6">
           Share your innovative ideas and get recognized by the community
         </p>
         
-        <WeeklyChallengeCard />
+        <WeeklyChallengeCard 
+          challenge={currentChallenge} 
+          isLoading={isLoadingChallenge} 
+        />
         
         <Tabs
           defaultValue="feed"
@@ -54,9 +66,13 @@ const SrijanIdeaHub = () => {
                 setActiveTab("feed");
                 toast({
                   title: "Idea submitted successfully!",
-                  description: "Your idea is now waiting for approval.",
+                  description: isOnline ? 
+                    "Your idea is now waiting for approval." : 
+                    "Your idea will be submitted when you're back online.",
                 });
-              }} 
+              }}
+              submitIdea={submitIdea}
+              isOnline={isOnline}
             />
           </TabsContent>
         </Tabs>

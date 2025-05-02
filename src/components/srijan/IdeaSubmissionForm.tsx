@@ -18,7 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useMobileDetection } from "@/hooks/use-mobile";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
+import { IdeaDraft } from "@/hooks/use-ideas";
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(100),
@@ -30,15 +31,21 @@ type IdeaFormValues = z.infer<typeof formSchema>;
 
 type IdeaSubmissionFormProps = {
   onSubmitSuccess: () => void;
+  submitIdea: (idea: IdeaDraft) => void;
+  isOnline: boolean;
 };
 
-export function IdeaSubmissionForm({ onSubmitSuccess }: IdeaSubmissionFormProps) {
-  const { userRole } = useAuth();
+export function IdeaSubmissionForm({ 
+  onSubmitSuccess, 
+  submitIdea, 
+  isOnline 
+}: IdeaSubmissionFormProps) {
+  const { profile } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const [draftKey] = useState(`srijan-idea-draft-${new Date().getTime()}`);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [savedDrafts, setSavedDrafts] = useLocalStorage<Record<string, IdeaFormValues>>("srijan-idea-drafts", {});
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [draftKey] = useState(`idea-draft-${Date.now()}`);
+  const [savedDrafts, setSavedDrafts] = useLocalStorage<Record<string, IdeaFormValues>>("idea-drafts", {});
   const isMobile = useMobileDetection();
   
   const form = useForm<IdeaFormValues>({
@@ -50,20 +57,6 @@ export function IdeaSubmissionForm({ onSubmitSuccess }: IdeaSubmissionFormProps)
     },
   });
 
-  // Monitor online status
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-  
   // Auto-save draft every 5 seconds if changes are made
   useEffect(() => {
     const subscription = form.watch((value) => {
@@ -78,14 +71,6 @@ export function IdeaSubmissionForm({ onSubmitSuccess }: IdeaSubmissionFormProps)
     
     return () => subscription.unsubscribe();
   }, [form.watch]);
-  
-  // Try to sync drafts when online
-  useEffect(() => {
-    if (isOnline && Object.keys(savedDrafts).length > 0) {
-      // In a real app, you would send drafts to server here
-      console.log("Auto-syncing drafts:", savedDrafts);
-    }
-  }, [isOnline, savedDrafts]);
   
   const saveDraft = () => {
     const values = form.getValues();
@@ -102,8 +87,9 @@ export function IdeaSubmissionForm({ onSubmitSuccess }: IdeaSubmissionFormProps)
     if (!file) return;
     
     setIsUploading(true);
+    setMediaFile(file);
     
-    // Just for demo - in real app you would upload to server/cloud storage
+    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       const url = reader.result as string;
@@ -116,37 +102,30 @@ export function IdeaSubmissionForm({ onSubmitSuccess }: IdeaSubmissionFormProps)
   
   const removeMedia = () => {
     setMediaPreview(null);
+    setMediaFile(null);
     form.setValue("mediaUrl", "");
   };
   
   const onSubmit = async (values: IdeaFormValues) => {
-    if (!isOnline) {
-      saveDraft();
-      return;
-    }
+    if (!profile) return;
     
-    // In a real app, API call would go here
-    console.log("Submitting idea:", values);
+    const ideaData: IdeaDraft = {
+      title: values.title,
+      description: values.description,
+      media: mediaFile || undefined,
+      media_url: mediaFile ? undefined : values.mediaUrl
+    };
     
-    // Simple AI moderation simulation
-    const bannedWords = ["spam", "offensive", "inappropriate"];
-    const containsBannedWord = bannedWords.some(
-      word => values.title.toLowerCase().includes(word) || values.description.toLowerCase().includes(word)
-    );
+    submitIdea(ideaData);
     
-    if (containsBannedWord) {
-      console.log("Content flagged for manual review");
-      // In real app, would send to moderation queue
-    } else {
-      console.log("Content automatically approved");
-      // Remove from drafts
-      const { [draftKey]: removedDraft, ...remainingDrafts } = savedDrafts;
-      setSavedDrafts(remainingDrafts);
-    }
+    // Remove from drafts
+    const { [draftKey]: removedDraft, ...remainingDrafts } = savedDrafts;
+    setSavedDrafts(remainingDrafts);
     
     onSubmitSuccess();
     form.reset();
     setMediaPreview(null);
+    setMediaFile(null);
   };
   
   return (
@@ -243,7 +222,6 @@ export function IdeaSubmissionForm({ onSubmitSuccess }: IdeaSubmissionFormProps)
               <Button 
                 type="submit" 
                 className="flex-1"
-                disabled={!isOnline && form.formState.isValid}
               >
                 {isOnline ? "Submit Idea" : "Save Offline"}
               </Button>

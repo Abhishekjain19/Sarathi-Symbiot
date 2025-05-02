@@ -1,101 +1,20 @@
-import { useState, useEffect } from "react";
-import { Search, Star, Award, Badge, Video, MessageSquare } from "lucide-react";
+
+import { useState } from "react";
+import { Search, Star, Award, Badge, Video, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge as UIBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIdeas } from "@/hooks/use-ideas";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type IdeaBadge = "innovator" | "creative" | "solver" | "leader" | "contributor";
 
-type Feedback = {
-  id: number;
-  professorName: string;
-  content: string;
-  createdAt: string;
-};
-
-type Idea = {
-  id: number;
-  title: string;
-  description: string;
-  studentName: string;
-  studentId: number;
-  createdAt: string;
-  mediaUrl?: string;
-  featured: boolean;
-  badges: IdeaBadge[];
-  feedback?: Feedback[];
-};
-
-const mockIdeas: Idea[] = [
-  {
-    id: 1,
-    title: "Solar-powered Water Purifier for Rural Areas",
-    description: "A portable device that uses solar energy to purify water, making clean drinking water accessible to people in rural areas without electricity.",
-    studentName: "Priya Sharma",
-    studentId: 1,
-    createdAt: "2025-04-25T10:30:00Z",
-    mediaUrl: "https://placehold.co/600x400/1a237e/ffffff?text=Solar+Purifier+Concept",
-    featured: true,
-    badges: ["innovator", "solver"],
-    feedback: [
-      {
-        id: 1,
-        professorName: "Dr. Ravi Kumar",
-        content: "Excellent initiative! Consider adding a filter maintenance schedule to ensure long-term sustainability.",
-        createdAt: "2025-04-25T14:30:00Z"
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: "Biodegradable Seed Packaging",
-    description: "Packaging made from organic materials embedded with seeds that can be planted directly in soil, eliminating waste and promoting greenery.",
-    studentName: "Arjun Patel",
-    studentId: 2,
-    createdAt: "2025-04-24T14:20:00Z",
-    mediaUrl: "https://placehold.co/600x400/26a69a/ffffff?text=Seed+Packaging",
-    featured: true,
-    badges: ["creative"],
-  },
-  {
-    id: 3,
-    title: "Community Learning Exchange App",
-    description: "A mobile application that connects students from different schools to share knowledge, resources, and cultural experiences.",
-    studentName: "Riya Desai",
-    studentId: 3,
-    createdAt: "2025-04-23T09:15:00Z",
-    featured: false,
-    badges: ["contributor"],
-  },
-  {
-    id: 4,
-    title: "Smart Waste Segregation System",
-    description: "An affordable waste bin system that automatically sorts recyclables, compostables, and general waste using simple sensors.",
-    studentName: "Vikram Singh",
-    studentId: 4,
-    createdAt: "2025-04-22T16:45:00Z",
-    mediaUrl: "https://placehold.co/600x400/1a237e/ffffff?text=Waste+Segregation",
-    featured: false,
-    badges: ["solver"],
-  },
-  {
-    id: 5,
-    title: "Peer-to-Peer Homework Assistant Network",
-    description: "A platform where students can help each other with homework problems through brief video explanations and voice notes.",
-    studentName: "Ananya Kumar",
-    studentId: 5,
-    createdAt: "2025-04-21T11:30:00Z",
-    mediaUrl: "https://placehold.co/600x400/26a69a/ffffff?text=Homework+Network",
-    featured: false,
-    badges: ["leader", "contributor"],
-  },
-];
-
+// In a real app, these would come from a database table
 const badgeIcons = {
   innovator: Star,
   creative: Award, 
@@ -121,23 +40,48 @@ const badgeColors = {
 };
 
 export const CommunityFeed = () => {
-  const { userRole } = useAuth();
+  const { profile } = useAuth();
   const { toast } = useToast();
-  const [ideas, setIdeas] = useState<Idea[]>(mockIdeas);
+  const { ideas, isLoadingIdeas, updateIdeaStatus } = useIdeas();
   const [searchQuery, setSearchQuery] = useState("");
-  const [feedbackDrafts, setFeedbackDrafts] = useState<{ [key: number]: string }>({});
+  const [feedbackDrafts, setFeedbackDrafts] = useState<{ [key: string]: string }>({});
   const [activeTab, setActiveTab] = useState("all");
 
-  const filteredIdeas = ideas.filter(idea => 
+  // Generate random badges for demo purposes
+  // In a real app, these would come from backend logic
+  const getRandomBadges = (id: string): IdeaBadge[] => {
+    const seed = parseInt(id.substring(0, 8), 16);
+    const possibleBadges: IdeaBadge[] = ["innovator", "creative", "solver", "leader", "contributor"];
+    const numBadges = seed % 3 + 1; // 1-3 badges
+    
+    const badges: IdeaBadge[] = [];
+    for (let i = 0; i < numBadges; i++) {
+      const idx = (seed + i) % possibleBadges.length;
+      badges.push(possibleBadges[idx]);
+    }
+    
+    return badges;
+  };
+
+  const filteredIdeas = ideas?.filter(idea => 
     idea.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     idea.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    idea.studentName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    (idea.profiles && 
+     (idea.profiles.first_name + ' ' + idea.profiles.last_name)
+      .toLowerCase().includes(searchQuery.toLowerCase()))
+  ) || [];
 
-  const sortedIdeas = [...filteredIdeas].sort((a, b) => {
-    if (a.featured && !b.featured) return -1;
-    if (!a.featured && b.featured) return 1;
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  // Only show approved ideas for students and professors
+  // NGOs can see all ideas
+  const visibleIdeas = profile?.role === 'ngo'
+    ? filteredIdeas
+    : filteredIdeas.filter(idea => idea.status === 'approved' || idea.user_id === profile?.id);
+
+  const sortedIdeas = [...visibleIdeas].sort((a, b) => {
+    // "Featured" ideas are approved ones
+    if (a.status === 'approved' && b.status !== 'approved') return -1;
+    if (a.status !== 'approved' && b.status === 'approved') return 1;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
   const formatDate = (dateString: string) => {
@@ -145,7 +89,7 @@ export const CommunityFeed = () => {
     return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
-  const handleFeedbackSubmit = (ideaId: number) => {
+  const handleFeedbackSubmit = (ideaId: string) => {
     const feedback = feedbackDrafts[ideaId];
     if (!feedback?.trim()) return;
 
@@ -161,120 +105,144 @@ export const CommunityFeed = () => {
     });
   };
 
-  const renderIdeaCard = (idea: Idea, showFeedback: boolean = false) => (
-    <Card 
-      key={idea.id} 
-      className={`bg-sarathi-darkCard border-sarathi-gray/30 ${idea.featured ? 'border-l-4 border-l-primary' : ''}`}
-    >
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start gap-2">
-          <div>
-            <CardTitle className="text-lg">
-              {idea.title}
-              {idea.featured && (
-                <UIBadge className="ml-2 bg-primary/20 text-primary hover:bg-primary/30">Featured</UIBadge>
-              )}
-            </CardTitle>
-            <div className="flex flex-wrap items-center gap-2 mt-1">
-              <span className="text-sm text-muted-foreground">
-                By {idea.studentName} • {formatDate(idea.createdAt)}
-              </span>
-              {idea.badges.map((badge) => {
-                const BadgeIcon = badgeIcons[badge];
-                return (
-                  <UIBadge
-                    key={badge}
-                    variant="outline"
-                    className={badgeColors[badge]}
-                  >
-                    <BadgeIcon size={12} className="mr-1" />
-                    {badgeLabels[badge]}
-                  </UIBadge>
-                );
-              })}
-            </div>
-          </div>
+  const handleStatusChange = (id: string, status: 'approved' | 'rejected') => {
+    updateIdeaStatus({ id, status });
+  };
 
-          {userRole === "ngo" && (
-            <div className="flex gap-2">
-              <UIBadge 
-                variant="outline" 
-                className="cursor-pointer bg-green-500/10 text-green-500 hover:bg-green-500/20"
-              >
-                Approve
-              </UIBadge>
-              <UIBadge 
-                variant="outline"
-                className="cursor-pointer bg-red-500/10 text-red-500 hover:bg-red-500/20"
-              >
-                Reject
-              </UIBadge>
-            </div>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm mb-4">{idea.description}</p>
-        
-        {idea.mediaUrl && (
-          <div className="rounded-lg overflow-hidden mb-4 max-h-[300px]">
-            {idea.mediaUrl.includes('video') ? (
-              <div className="bg-black/20 h-[200px] flex items-center justify-center">
-                <Video size={40} />
+  const renderIdeaCard = (idea: any, showFeedback: boolean = false) => {
+    const badges = getRandomBadges(idea.id);
+    const isFeatured = idea.status === 'approved';
+    
+    return (
+      <Card 
+        key={idea.id} 
+        className={`bg-sarathi-darkCard border-sarathi-gray/30 ${isFeatured ? 'border-l-4 border-l-primary' : ''}`}
+      >
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start gap-2">
+            <div>
+              <CardTitle className="text-lg">
+                {idea.title}
+                {isFeatured && (
+                  <UIBadge className="ml-2 bg-primary/20 text-primary hover:bg-primary/30">Featured</UIBadge>
+                )}
+                {idea.status === 'pending' && (
+                  <UIBadge className="ml-2 bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30">Pending</UIBadge>
+                )}
+                {idea.status === 'rejected' && (
+                  <UIBadge className="ml-2 bg-red-500/20 text-red-500 hover:bg-red-500/30">Rejected</UIBadge>
+                )}
+              </CardTitle>
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <span className="text-sm text-muted-foreground">
+                  By {idea.profiles?.first_name} {idea.profiles?.last_name} • {formatDate(idea.created_at)}
+                </span>
+                {badges.map((badge) => {
+                  const BadgeIcon = badgeIcons[badge];
+                  return (
+                    <UIBadge
+                      key={badge}
+                      variant="outline"
+                      className={badgeColors[badge]}
+                    >
+                      <BadgeIcon size={12} className="mr-1" />
+                      {badgeLabels[badge]}
+                    </UIBadge>
+                  );
+                })}
               </div>
-            ) : (
-              <img 
-                src={idea.mediaUrl} 
-                alt={idea.title}
-                className="w-full h-full object-cover"
-              />
+            </div>
+
+            {profile?.role === "ngo" && idea.status === 'pending' && (
+              <div className="flex gap-2">
+                <UIBadge 
+                  variant="outline" 
+                  className="cursor-pointer bg-green-500/10 text-green-500 hover:bg-green-500/20"
+                  onClick={() => handleStatusChange(idea.id, 'approved')}
+                >
+                  Approve
+                </UIBadge>
+                <UIBadge 
+                  variant="outline"
+                  className="cursor-pointer bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                  onClick={() => handleStatusChange(idea.id, 'rejected')}
+                >
+                  Reject
+                </UIBadge>
+              </div>
             )}
           </div>
-        )}
-
-        {showFeedback && idea.feedback && idea.feedback.length > 0 && (
-          <div className="mt-4 border-t border-sarathi-gray/30 pt-4 space-y-3">
-            <h4 className="text-sm font-medium text-muted-foreground">Professor Feedback</h4>
-            {idea.feedback.map((feedback) => (
-              <div key={feedback.id} className="bg-sarathi-gray/10 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <MessageSquare size={14} className="text-primary" />
-                  <span className="text-sm font-medium">{feedback.professorName}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(feedback.createdAt)}
-                  </span>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm mb-4">{idea.description}</p>
+          
+          {idea.media_url && (
+            <div className="rounded-lg overflow-hidden mb-4 max-h-[300px]">
+              {idea.media_url.includes('video') ? (
+                <div className="bg-black/20 h-[200px] flex items-center justify-center">
+                  <Video size={40} />
                 </div>
-                <p className="text-sm">{feedback.content}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {userRole === "professor" && (
-          <div className="mt-4 border-t border-sarathi-gray/30 pt-4">
-            <div className="flex items-start gap-2">
-              <Textarea
-                placeholder="Add your feedback to help the student improve..."
-                value={feedbackDrafts[idea.id] || ""}
-                onChange={(e) => setFeedbackDrafts(prev => ({
-                  ...prev,
-                  [idea.id]: e.target.value
-                }))}
-                className="min-h-[80px] bg-sarathi-darkCard border-sarathi-gray/30"
-              />
-              <Button
-                size="sm"
-                onClick={() => handleFeedbackSubmit(idea.id)}
-                className="shrink-0"
-              >
-                <MessageSquare className="mr-2" size={16} />
-                Send
-              </Button>
+              ) : (
+                <img 
+                  src={idea.media_url} 
+                  alt={idea.title}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+
+          {/* Feedback form for professors */}
+          {profile?.role === "professor" && (
+            <div className="mt-4 border-t border-sarathi-gray/30 pt-4">
+              <div className="flex items-start gap-2">
+                <Textarea
+                  placeholder="Add your feedback to help the student improve..."
+                  value={feedbackDrafts[idea.id] || ""}
+                  onChange={(e) => setFeedbackDrafts(prev => ({
+                    ...prev,
+                    [idea.id]: e.target.value
+                  }))}
+                  className="min-h-[80px] bg-sarathi-darkCard border-sarathi-gray/30"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => handleFeedbackSubmit(idea.id)}
+                  className="shrink-0"
+                >
+                  <MessageCircle className="mr-2" size={16} />
+                  Send
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderLoadingState = () => (
+    <div className="space-y-4">
+      {[1, 2, 3].map((i) => (
+        <Card key={i} className="bg-sarathi-darkCard border-sarathi-gray/30">
+          <CardHeader className="pb-2">
+            <div className="flex justify-between">
+              <Skeleton className="h-6 w-48 bg-sarathi-gray/20" />
+              <Skeleton className="h-6 w-20 bg-sarathi-gray/20" />
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <Skeleton className="h-4 w-32 bg-sarathi-gray/20" />
+              <Skeleton className="h-4 w-24 bg-sarathi-gray/20" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-4 w-full bg-sarathi-gray/20 mb-2" />
+            <Skeleton className="h-4 w-4/5 bg-sarathi-gray/20 mb-2" />
+            <Skeleton className="h-32 w-full bg-sarathi-gray/20 rounded-lg mt-4" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 
   return (
@@ -289,7 +257,7 @@ export const CommunityFeed = () => {
         />
       </div>
 
-      {userRole === "student" && (
+      {profile?.role === "student" && (
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="all">All Posts</TabsTrigger>
@@ -297,42 +265,55 @@ export const CommunityFeed = () => {
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
-            {sortedIdeas.length === 0 ? (
-              <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
-                <CardContent className="flex flex-col items-center justify-center py-8">
-                  <p className="text-muted-foreground">No ideas found matching your search.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              sortedIdeas.map(idea => renderIdeaCard(idea, false))
+            {isLoadingIdeas ? renderLoadingState() : (
+              sortedIdeas.length === 0 ? (
+                <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
+                  <CardContent className="flex flex-col items-center justify-center py-8">
+                    <p className="text-muted-foreground">No ideas found matching your search.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {sortedIdeas.map(idea => renderIdeaCard(idea, false))}
+                </div>
+              )
             )}
           </TabsContent>
 
           <TabsContent value="my-posts" className="mt-6">
-            {sortedIdeas.filter(idea => idea.studentId === 1).length === 0 ? (
-              <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
-                <CardContent className="flex flex-col items-center justify-center py-8">
-                  <p className="text-muted-foreground">You haven't posted any ideas yet.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              sortedIdeas
-                .filter(idea => idea.studentId === 1)
-                .map(idea => renderIdeaCard(idea, true))
+            {isLoadingIdeas ? renderLoadingState() : (
+              sortedIdeas.filter(idea => idea.user_id === profile?.id).length === 0 ? (
+                <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
+                  <CardContent className="flex flex-col items-center justify-center py-8">
+                    <p className="text-muted-foreground">You haven't posted any ideas yet.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {sortedIdeas
+                    .filter(idea => idea.user_id === profile?.id)
+                    .map(idea => renderIdeaCard(idea, true))
+                  }
+                </div>
+              )
             )}
           </TabsContent>
         </Tabs>
       )}
 
-      {userRole !== "student" && (
-        sortedIdeas.length === 0 ? (
-          <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
-            <CardContent className="flex flex-col items-center justify-center py-8">
-              <p className="text-muted-foreground">No ideas found matching your search.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          sortedIdeas.map(idea => renderIdeaCard(idea, userRole === "professor"))
+      {profile?.role !== "student" && (
+        isLoadingIdeas ? renderLoadingState() : (
+          sortedIdeas.length === 0 ? (
+            <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
+              <CardContent className="flex flex-col items-center justify-center py-8">
+                <p className="text-muted-foreground">No ideas found matching your search.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {sortedIdeas.map(idea => renderIdeaCard(idea, profile?.role === "professor"))}
+            </div>
+          )
         )
       )}
     </div>

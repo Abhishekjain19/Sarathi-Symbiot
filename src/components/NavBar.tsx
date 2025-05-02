@@ -2,24 +2,24 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, User, BookOpen, Map, BarChart, LogOut, Star, MessageCircle } from "lucide-react";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 import { OfflineStatus } from "./OfflineStatus";
 import { cn } from "@/lib/utils";
 
 export const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { userRole, setUserRole, setIsLoggedIn } = useAuth();
+  const { profile, signOut } = useAuth();
   const location = useLocation();
   
   const handleLogout = () => {
-    setUserRole(null);
-    setIsLoggedIn(false);
+    signOut();
   };
 
   const getDashboardLink = () => {
-    if (userRole === "student") return "/student-dashboard";
-    if (userRole === "professor") return "/professor-dashboard";
-    if (userRole === "ngo") return "/ngo-dashboard";
+    if (!profile) return "/";
+    if (profile.role === "student") return "/student-dashboard";
+    if (profile.role === "professor") return "/professor-dashboard";
+    if (profile.role === "ngo") return "/ngo-dashboard";
     return "/";
   };
 
@@ -69,14 +69,14 @@ export const NavBar = () => {
           <div className="container mx-auto px-4 py-6 flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <NavLink to={getDashboardLink()} icon={User} label="Dashboard" />
-              {userRole === "professor" && (
+              {profile?.role === "professor" && (
                 <NavLink to="/lectures/all" icon={BookOpen} label="My Lectures" />
               )}
               <NavLink to="/maps" icon={Map} label="Find Centers" />
               <NavLink to="/assessment/1" icon={BarChart} label="Assessments" />
               <NavLink to="/srijan" icon={Star} label="Ideas Hub" />
               <NavLink to="/gyaansetu" icon={MessageCircle} label="AI Assistant" />
-              {userRole === "ngo" && (
+              {profile?.role === "ngo" && (
                 <NavLink to="/srijan-admin" icon={Star} label="Ideas Admin" />
               )}
             </div>
