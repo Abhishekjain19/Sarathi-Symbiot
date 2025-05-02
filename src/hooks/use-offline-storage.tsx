@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 // Generic hook for managing data with offline support
 export function useOfflineStorage<T>(key: string, initialValue: T, maxItems?: number): [
   T, 
-  (value: T) => void,
+  (value: T | ((prevValue: T) => T)) => void,
   boolean
 ] {
   // State to track online status
@@ -43,9 +43,9 @@ export function useOfflineStorage<T>(key: string, initialValue: T, maxItems?: nu
   }, []);
 
   // Set data to localStorage and update state
-  const setValue = (value: T) => {
+  const setValue = (value: T | ((prevValue: T) => T)) => {
     try {
-      // Allow value to be a function
+      // Handle function or direct value
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       
       // If maxItems is specified and value is an array, limit the number of items
