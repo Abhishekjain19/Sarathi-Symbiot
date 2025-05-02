@@ -49,9 +49,11 @@ export function useOfflineStorage<T>(key: string, initialValue: T, maxItems?: nu
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       
       // If maxItems is specified and value is an array, limit the number of items
-      let limitedValue = valueToStore;
-      if (Array.isArray(valueToStore) && maxItems && valueToStore.length > maxItems) {
-        limitedValue = valueToStore.slice(-maxItems);
+      let limitedValue: T = valueToStore;
+      if (maxItems !== undefined && Array.isArray(valueToStore)) {
+        // We need to cast here to make TypeScript happy
+        // This is safe because we've verified valueToStore is an array with Array.isArray
+        limitedValue = valueToStore.slice(-maxItems) as unknown as T;
       }
       
       // Save to local state
