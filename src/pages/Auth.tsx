@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, LucideIcon } from "lucide-react";
+import { Eye, EyeOff, User, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -39,7 +38,7 @@ type RoleOption = {
   value: "student" | "professor" | "ngo";
   label: string;
   description: string;
-  icon: LucideIcon;
+  icon: React.ElementType;
 };
 
 // Mock user roles with icons
@@ -48,25 +47,19 @@ const roleOptions: RoleOption[] = [
     value: "student",
     label: "Student",
     description: "Access lectures and take assessments",
-    icon: ({ size }: { size: number }) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
-    ),
+    icon: User, // Using Lucide's User icon instead of SVG function
   },
   {
     value: "professor",
     label: "Professor",
     description: "Create lectures and manage assessments",
-    icon: ({ size }: { size: number }) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
-    ),
+    icon: User, // Using Lucide's User icon instead of SVG function
   },
   {
     value: "ngo",
     label: "NGO Admin",
     description: "Manage resources and coordinate efforts",
-    icon: ({ size }: { size: number }) => (
-      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    ),
+    icon: Users, // Using Lucide's Users icon instead of SVG function
   },
 ];
 

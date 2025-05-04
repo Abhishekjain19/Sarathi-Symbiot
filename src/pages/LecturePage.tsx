@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Download, Plus, Minus, MessageCircle, ThumbsUp } from "lucide-react";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NavBar } from "@/components/NavBar";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 
 // Mock lecture data
 const lectureData = {

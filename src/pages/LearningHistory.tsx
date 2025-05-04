@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { NavBar } from "@/components/NavBar";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { BookOpen, FileText } from "lucide-react";

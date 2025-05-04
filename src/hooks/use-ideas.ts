@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useEffect } from "react";
 
 export type Idea = {
   id: string;
@@ -100,7 +101,7 @@ export const useIdeas = () => {
         if (error) throw error;
         
         // Remove from offline storage after successful sync
-        setOfflineIdeas(prev => prev.filter(i => i !== idea));
+        setOfflineIdeas((prev: IdeaDraft[]) => prev.filter(i => i !== idea));
         
         toast({
           title: "Idea synced!",
@@ -125,7 +126,9 @@ export const useIdeas = () => {
       .order('created_at', { ascending: false });
       
     if (error) throw error;
-    return data as Idea[];
+    
+    // Cast the data to the expected type
+    return data as unknown as Idea[];
   };
 
   // Get a single idea by ID
@@ -139,7 +142,9 @@ export const useIdeas = () => {
       .single();
       
     if (error) throw error;
-    return data as Idea;
+    
+    // Cast the data to the expected type
+    return data as unknown as Idea;
   };
 
   // Submit a new idea
@@ -148,7 +153,7 @@ export const useIdeas = () => {
     
     // If offline, store locally
     if (!navigator.onLine) {
-      setOfflineIdeas(prev => [...prev, ideaData]);
+      setOfflineIdeas((prev: IdeaDraft[]) => [...prev, ideaData]);
       toast({
         title: "Saved offline",
         description: "Your idea will be submitted when you're back online.",

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { NavBar } from "@/components/NavBar";
 import { useOfflineStorage } from "@/hooks/use-offline-storage";
@@ -7,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Send, MessageCircle, ListTodo, BookOpen, FileText, CalendarDays } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GyaanSetuChat, Message } from "@/components/GyaanSetuChat";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 // Types for tools

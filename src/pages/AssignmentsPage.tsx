@@ -1,6 +1,6 @@
 
 import { NavBar } from "@/components/NavBar";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AssignmentsComponent from "@/components/Assignments";

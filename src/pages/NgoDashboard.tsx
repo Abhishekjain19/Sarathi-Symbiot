@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { MapPin, School, Wifi, Users, Laptop, Battery, Map as MapIcon } from "lucide-react";
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/NavBar";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 
 // Mock data
 const centerStats = [
@@ -113,7 +112,7 @@ const NgoDashboard = () => {
               <CardContent className="p-0">
                 <div className="w-full h-[450px]">
                   <iframe 
-                    src="https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d622.7072322075145!2d77.521654!3d13.0116666!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e0!4m3!3m2!1d13.0116945!2d77.5220557!4m3!3m2!1d13.0119921!2d77.5221362!4m3!3m2!1d13.0117565!2d77.5214722!5e0!3m2!1sen!2sin!4v1714459532005!5m2!1sen!2sin" 
+                    src="https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d622.7072322075145!2d77.521654!3d13.0116666!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e0!4m3!3m2!1d13.0116945!2d77.5220557!4m3!3m2!1d13.0119921!2d77.5221362!4m3!3m2!1d13.0117565!2d77.5214722!5e0!3m2!1sen!2sin!4v1714459532005!5m2!1sen!2sin!4v1714459532005!5m2!1sen!2sin" 
                     width="100%" 
                     height="100%" 
                     style={{ border: 0 }}

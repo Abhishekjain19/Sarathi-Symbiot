@@ -1,12 +1,11 @@
-
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Users, Play, Circle, Filter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { NavBar } from "@/components/NavBar";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import {

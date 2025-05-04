@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/NavBar";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 import { BatchSelector } from "@/components/BatchSelector";
 
 // Mock data with grade information

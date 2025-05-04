@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Plus } from "lucide-react";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NavBar } from "@/components/NavBar";
-import { useAuth } from "@/App";
+import { useAuth } from "@/context/AuthContext";
 
 const subjects = ["Physics", "Chemistry", "Mathematics", "Biology", "English"];
 const grades = ["4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th"];
