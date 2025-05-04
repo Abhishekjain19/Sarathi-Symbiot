@@ -1,330 +1,249 @@
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { useEffect } from "react";
+import { toast } from "@/components/ui/use-toast";
 
-export type Idea = {
+// Define types for ideas
+export interface Idea {
   id: string;
   title: string;
   description: string;
-  media_url?: string;
+  media_url: string | null;
   user_id: string;
-  status: 'pending' | 'approved' | 'rejected';
-  challenge_id?: string;
+  status: "pending" | "approved" | "rejected";
+  challenge_id: string | null;
   created_at: string;
   updated_at: string;
-  profiles?: {
+  profiles: {
     first_name: string;
     last_name: string;
   };
-};
+}
 
-export type IdeaDraft = {
+export interface IdeaDraft {
   title: string;
   description: string;
-  media?: File;
-  media_url?: string;
-};
+  media_url?: string | null;
+  status: "pending";
+  challenge_id?: string | null;
+  localId?: string;
+}
 
-export const useIdeas = () => {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [isOnline, setIsOnline] = useLocalStorage("navigator-online-status", navigator.onLine);
-  const [offlineIdeas, setOfflineIdeas] = useLocalStorage<IdeaDraft[]>("navigator-offline-ideas", []);
+export function useIdeas() {
+  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [ideaDrafts, setIdeaDrafts] = useState<IdeaDraft[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pendingIdeas, setPendingIdeas] = useState<Idea[]>([]);
+  const { profile } = useAuth();
 
-  // Check online status
+  // Load offline stored drafts from localStorage
   useEffect(() => {
-    const updateOnlineStatus = () => {
-      setIsOnline(navigator.onLine);
-      // Attempt to sync when coming back online
-      if (navigator.onLine && offlineIdeas.length > 0) {
-        syncOfflineIdeas();
+    const loadOfflineDrafts = () => {
+      try {
+        const draftsJson = localStorage.getItem("ideaDrafts");
+        if (draftsJson) {
+          const drafts = JSON.parse(draftsJson);
+          setIdeaDrafts(drafts);
+        }
+      } catch (error) {
+        console.error("Error loading offline drafts:", error);
       }
     };
-    
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
-    
-    return () => {
-      window.removeEventListener('online', updateOnlineStatus);
-      window.removeEventListener('offline', updateOnlineStatus);
-    };
-  }, [offlineIdeas.length]);
 
-  // Sync offline ideas when back online
-  const syncOfflineIdeas = async () => {
-    if (!navigator.onLine || !user) return;
-    
-    const ideasToSync = [...offlineIdeas];
-    
-    for (const idea of ideasToSync) {
-      try {
-        let mediaUrl = idea.media_url;
+    loadOfflineDrafts();
+  }, []);
+
+  // Save drafts to localStorage whenever they change
+  useEffect(() => {
+    if (ideaDrafts.length > 0) {
+      localStorage.setItem("ideaDrafts", JSON.stringify(ideaDrafts));
+    }
+  }, [ideaDrafts]);
+
+  // Fetch ideas from Supabase
+  const fetchIdeas = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from("ideas")
+        .select(`
+          *,
+          profiles:user_id(first_name, last_name)
+        `)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
         
-        // If there's media to upload
-        if (idea.media && navigator.onLine) {
-          const file = idea.media;
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}.${fileExt}`;
-          const filePath = `${user.id}/${fileName}`;
+      if (error) {
+        throw error;
+      }
+      
+      setIdeas(data as unknown as Idea[]);
+    } catch (error: any) {
+      console.error("Error fetching ideas:", error.message);
+      toast({
+        title: "Error fetching ideas",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch pending ideas for moderation (NGO users only)
+  const fetchPendingIdeas = async () => {
+    if (profile?.role !== "ngo") return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("ideas")
+        .select(`
+          *,
+          profiles:user_id(first_name, last_name)
+        `)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+        
+      if (error) {
+        throw error;
+      }
+      
+      setPendingIdeas(data as unknown as Idea[]);
+    } catch (error: any) {
+      console.error("Error fetching pending ideas:", error.message);
+    }
+  };
+
+  // Add a new idea (offline-first approach)
+  const addIdea = (newIdea: IdeaDraft) => {
+    // Add a local ID to track this draft
+    const draftWithId = {
+      ...newIdea,
+      localId: Date.now().toString(),
+    };
+    
+    // Add to local drafts
+    setIdeaDrafts((prev) => [...prev, draftWithId]);
+    
+    // If online, try to submit right away
+    if (navigator.onLine) {
+      syncIdeas();
+    } else {
+      toast({
+        title: "Saved locally",
+        description: "Your idea will be submitted when you're back online",
+      });
+    }
+  };
+
+  // Sync offline drafts with Supabase when online
+  const syncIdeas = async () => {
+    if (!profile || ideaDrafts.length === 0) return;
+    
+    for (const draft of ideaDrafts) {
+      try {
+        const { data, error } = await supabase
+          .from("ideas")
+          .insert([
+            {
+              title: draft.title,
+              description: draft.description,
+              media_url: draft.media_url || null,
+              user_id: profile.id,
+              status: "pending",
+              challenge_id: draft.challenge_id || null,
+            },
+          ])
+          .select();
           
-          // Upload the media file
-          const { error: uploadError, data } = await supabase.storage
-            .from('ideas_media')
-            .upload(filePath, file);
-            
-          if (uploadError) throw uploadError;
-          
-          // Get the media URL
-          const { data: { publicUrl } } = supabase.storage
-            .from('ideas_media')
-            .getPublicUrl(filePath);
-            
-          mediaUrl = publicUrl;
+        if (error) {
+          throw error;
         }
         
-        // Insert the idea into the database
-        const { error } = await supabase
-          .from('ideas')
-          .insert({
-            title: idea.title,
-            description: idea.description,
-            media_url: mediaUrl,
-            user_id: user.id,
-            status: 'pending'
-          });
-          
-        if (error) throw error;
-        
-        // Remove from offline storage after successful sync
-        setOfflineIdeas((prev: IdeaDraft[]) => prev.filter(i => i !== idea));
+        // On successful sync, remove from drafts
+        setIdeaDrafts((prev) => prev.filter(d => d.localId !== draft.localId));
         
         toast({
-          title: "Idea synced!",
-          description: "Your idea has been submitted for approval.",
+          title: "Idea submitted",
+          description: "Your idea was successfully submitted for approval",
         });
-      } catch (error) {
-        console.error("Error syncing idea:", error);
+        
+        // Refresh ideas list
+        fetchIdeas();
+      } catch (error: any) {
+        console.error("Error syncing idea:", error.message);
+        toast({
+          title: "Error submitting idea",
+          description: error.message,
+          variant: "destructive",
+        });
       }
     }
-    
-    // Refresh the ideas list
-    queryClient.invalidateQueries({ queryKey: ["ideas"] });
   };
 
-  // Get all ideas (with filters for approved/student's own)
-  const getIdeas = async () => {
-    if (!user) throw new Error("User not authenticated");
-    
-    const { data, error } = await supabase
-      .from('ideas')
-      .select('*, profiles:user_id(first_name, last_name)')
-      .order('created_at', { ascending: false });
-      
-    if (error) throw error;
-    
-    // Cast the data to the expected type
-    return data as unknown as Idea[];
-  };
-
-  // Get a single idea by ID
-  const getIdeaById = async (id: string) => {
-    if (!id) return null;
-    
-    const { data, error } = await supabase
-      .from('ideas')
-      .select('*, profiles:user_id(first_name, last_name)')
-      .eq('id', id)
-      .single();
-      
-    if (error) throw error;
-    
-    // Cast the data to the expected type
-    return data as unknown as Idea;
-  };
-
-  // Submit a new idea
-  const submitIdea = async (ideaData: IdeaDraft) => {
-    if (!user) throw new Error("User not authenticated");
-    
-    // If offline, store locally
-    if (!navigator.onLine) {
-      setOfflineIdeas((prev: IdeaDraft[]) => [...prev, ideaData]);
-      toast({
-        title: "Saved offline",
-        description: "Your idea will be submitted when you're back online.",
-      });
-      return;
-    }
-    
-    let mediaUrl = undefined;
-    
-    // Upload media if provided
-    if (ideaData.media) {
-      const file = ideaData.media;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
-      
-      const { error: uploadError, data } = await supabase.storage
-        .from('ideas_media')
-        .upload(filePath, file);
+  // Update idea status (for NGO moderation)
+  const updateIdeaStatus = async (ideaId: string, status: "approved" | "rejected") => {
+    try {
+      const { error } = await supabase
+        .from("ideas")
+        .update({ status })
+        .eq("id", ideaId);
         
-      if (uploadError) throw uploadError;
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('ideas_media')
-        .getPublicUrl(filePath);
-        
-      mediaUrl = publicUrl;
-    }
-    
-    // Submit the idea
-    const { data, error } = await supabase
-      .from('ideas')
-      .insert({
-        title: ideaData.title,
-        description: ideaData.description,
-        media_url: mediaUrl,
-        user_id: user.id,
-        status: 'pending'
-      })
-      .select();
-      
-    if (error) throw error;
-    return data[0] as Idea;
-  };
-
-  // Update idea status (for NGO admins)
-  const updateIdeaStatus = async (id: string, status: 'approved' | 'rejected') => {
-    const { data, error } = await supabase
-      .from('ideas')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select();
-      
-    if (error) throw error;
-    return data[0] as Idea;
-  };
-
-  // Get current weekly challenge
-  const getCurrentChallenge = async () => {
-    const now = new Date().toISOString();
-    
-    const { data, error } = await supabase
-      .from('challenges')
-      .select('*')
-      .lte('start_date', now)
-      .gte('end_date', now)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-      
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // No active challenge found
-        return null;
+      if (error) {
+        throw error;
       }
-      throw error;
+      
+      // Update local state
+      setPendingIdeas(prev => prev.filter(idea => idea.id !== ideaId));
+      
+      if (status === "approved") {
+        fetchIdeas(); // Refresh approved ideas
+      }
+      
+      toast({
+        title: `Idea ${status}`,
+        description: `The idea has been ${status} successfully`,
+      });
+    } catch (error: any) {
+      console.error(`Error ${status} idea:`, error.message);
+      toast({
+        title: `Error ${status} idea`,
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Effect to fetch ideas on component mount and when profile changes
+  useEffect(() => {
+    fetchIdeas();
+    
+    if (profile?.role === "ngo") {
+      fetchPendingIdeas();
     }
     
-    return data;
-  };
-
-  // Create a weekly challenge (for NGO admins)
-  const createChallenge = async (challenge: {
-    title: string;
-    description: string;
-    start_date: string;
-    end_date: string;
-  }) => {
-    if (!user) throw new Error("User not authenticated");
+    // Set up online/offline detection
+    const handleOnline = () => {
+      if (ideaDrafts.length > 0) {
+        syncIdeas();
+      }
+    };
     
-    const { data, error } = await supabase
-      .from('challenges')
-      .insert({
-        ...challenge,
-        created_by: user.id
-      })
-      .select();
-      
-    if (error) throw error;
-    return data[0];
-  };
-
-  // Use React Query to manage state and cache
-  const {
-    data: ideas,
-    isLoading: isLoadingIdeas,
-    error: ideasError,
-  } = useQuery({
-    queryKey: ["ideas"],
-    queryFn: getIdeas,
-    enabled: !!user && navigator.onLine,
-  });
-
-  const {
-    data: currentChallenge,
-    isLoading: isLoadingChallenge,
-  } = useQuery({
-    queryKey: ["currentChallenge"],
-    queryFn: getCurrentChallenge,
-    enabled: navigator.onLine,
-  });
-
-  const submitIdeaMutation = useMutation({
-    mutationFn: submitIdea,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ideas"] });
-      toast({
-        title: "Idea submitted",
-        description: "Your idea is now awaiting approval.",
-      });
-    },
-  });
-
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'approved' | 'rejected' }) => 
-      updateIdeaStatus(id, status),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["ideas"] });
-      toast({
-        title: "Status updated",
-        description: "The idea status has been updated successfully.",
-      });
-    },
-  });
-
-  const createChallengeMutation = useMutation({
-    mutationFn: createChallenge,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["currentChallenge"] });
-      toast({
-        title: "Challenge created",
-        description: "New weekly challenge has been created successfully.",
-      });
-    },
-  });
+    window.addEventListener("online", handleOnline);
+    
+    return () => {
+      window.removeEventListener("online", handleOnline);
+    };
+  }, [profile]);
 
   return {
     ideas,
-    isLoadingIdeas,
-    ideasError,
-    currentChallenge,
-    isLoadingChallenge,
-    isOnline,
-    offlineIdeas,
-    getIdeaById,
-    submitIdea: submitIdeaMutation.mutate,
-    isSubmittingIdea: submitIdeaMutation.isPending,
-    updateIdeaStatus: updateStatusMutation.mutate,
-    isUpdatingStatus: updateStatusMutation.isPending,
-    createChallenge: createChallengeMutation.mutate,
-    isCreatingChallenge: createChallengeMutation.isPending,
-    syncOfflineIdeas,
+    pendingIdeas,
+    loading,
+    addIdea,
+    updateIdeaStatus,
+    ideaDrafts: ideaDrafts.length,
   };
-};
+}

@@ -1,74 +1,41 @@
+
 import { useState } from "react";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, User, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { z } from "zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { Loader2, UserRound, Building2, GraduationCap } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-// Form schemas
+// Define schemas for form validation
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
-const signupSchema = z.object({
-  firstName: z.string().min(2, "First name is required"),
-  lastName: z.string().min(2, "Last name is required"),
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-  role: z.enum(["student", "professor", "ngo"]),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
+const registerSchema = z.object({
+  firstName: z.string().min(1, { message: "First name is required" }),
+  lastName: z.string().min(1, { message: "Last name is required" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  role: z.enum(["student", "professor", "ngo"], { 
+    required_error: "Please select a role",
+  }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-type SignupFormValues = z.infer<typeof signupSchema>;
-
-type RoleOption = {
-  value: "student" | "professor" | "ngo";
-  label: string;
-  description: string;
-  icon: React.ElementType;
-};
-
-// Mock user roles with icons
-const roleOptions: RoleOption[] = [
-  {
-    value: "student",
-    label: "Student",
-    description: "Access lectures and take assessments",
-    icon: User, // Using Lucide's User icon instead of SVG function
-  },
-  {
-    value: "professor",
-    label: "Professor",
-    description: "Create lectures and manage assessments",
-    icon: User, // Using Lucide's User icon instead of SVG function
-  },
-  {
-    value: "ngo",
-    label: "NGO Admin",
-    description: "Manage resources and coordinate efforts",
-    icon: Users, // Using Lucide's Users icon instead of SVG function
-  },
-];
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const Auth = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("login");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -79,81 +46,82 @@ const Auth = () => {
     },
   });
 
-  // Signup form
-  const signupForm = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
+  // Register form
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       firstName: "",
       lastName: "",
       email: "",
       password: "",
-      confirmPassword: "",
       role: "student",
     },
   });
 
-  // Handle login form submission
-  const onLoginSubmit = async (values: LoginFormValues) => {
-    setIsLoading(true);
+  // Handle login submission
+  const onLoginSubmit = async (data: LoginFormValues) => {
     try {
-      await signIn(values.email, values.password);
-      navigate("/");
+      setIsLoading(true);
+      await signIn(data.email, data.password);
+      // Navigate happens in the auth context
     } catch (error) {
-      console.error(error);
-    } finally {
+      console.error("Login failed:", error);
       setIsLoading(false);
     }
   };
 
-  // Handle signup form submission
-  const onSignupSubmit = async (values: SignupFormValues) => {
-    setIsLoading(true);
+  // Handle registration submission
+  const onRegisterSubmit = async (data: RegisterFormValues) => {
     try {
+      setIsLoading(true);
       await signUp(
-        values.email, 
-        values.password, 
-        values.role,
-        values.firstName,
-        values.lastName
+        data.email, 
+        data.password, 
+        data.role, 
+        data.firstName, 
+        data.lastName
       );
-      setActiveTab("login");
+      // Registration success is handled in the auth context
     } catch (error) {
-      console.error(error);
-    } finally {
+      console.error("Registration failed:", error);
       setIsLoading(false);
+    }
+  };
+
+  // Role icons for the registration form
+  const RoleIcon = ({ role }: { role: string }) => {
+    switch (role) {
+      case "student":
+        return <GraduationCap className="h-6 w-6" />;
+      case "professor":
+        return <UserRound className="h-6 w-6" />;
+      case "ngo":
+        return <Building2 className="h-6 w-6" />;
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sarathi-dark via-sarathi-dark/95 to-sarathi-dark text-white p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-md w-full"
-      >
+    <div className="min-h-screen bg-sarathi-dark flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-primary/80 to-secondary bg-clip-text text-transparent">
-            Navigator
-          </h1>
-          <p className="text-muted-foreground">
-            Sign in to access the platform
-          </p>
+          <h1 className="text-3xl font-bold text-primary">Navigator</h1>
+          <p className="text-muted-foreground mt-2">Your gateway to accessible education</p>
         </div>
 
-        <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
+        <Card className="border-sarathi-gray/30 bg-sarathi-darkCard">
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid grid-cols-2 w-full">
               <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
-            
+
+            {/* Login Tab */}
             <TabsContent value="login">
               <CardHeader>
-                <CardTitle>Login</CardTitle>
-                <CardDescription>
-                  Enter your credentials to access your account
-                </CardDescription>
+                <CardTitle>Welcome back</CardTitle>
+                <CardDescription>Enter your credentials to access your account</CardDescription>
               </CardHeader>
               <CardContent>
                 <Form {...loginForm}>
@@ -165,7 +133,7 @@ const Auth = () => {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="example@example.com" {...field} />
+                            <Input placeholder="your.email@example.com" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -178,48 +146,39 @@ const Auth = () => {
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <div className="relative">
-                              <Input
-                                type={showPassword ? "text" : "password"}
-                                placeholder="Enter your password"
-                                {...field}
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-0 top-0 h-full px-3"
-                                onClick={() => setShowPassword(!showPassword)}
-                              >
-                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                              </Button>
-                            </div>
+                            <Input type="password" placeholder="••••••••" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                     <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Logging in..." : "Login"}
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                          Logging in...
+                        </>
+                      ) : (
+                        "Login"
+                      )}
                     </Button>
                   </form>
                 </Form>
               </CardContent>
             </TabsContent>
-            
-            <TabsContent value="signup">
+
+            {/* Register Tab */}
+            <TabsContent value="register">
               <CardHeader>
-                <CardTitle>Create an Account</CardTitle>
-                <CardDescription>
-                  Enter your information to create an account
-                </CardDescription>
+                <CardTitle>Create an account</CardTitle>
+                <CardDescription>Enter your details to sign up</CardDescription>
               </CardHeader>
               <CardContent>
-                <Form {...signupForm}>
-                  <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
-                        control={signupForm.control}
+                        control={registerForm.control}
                         name="firstName"
                         render={({ field }) => (
                           <FormItem>
@@ -232,7 +191,7 @@ const Auth = () => {
                         )}
                       />
                       <FormField
-                        control={signupForm.control}
+                        control={registerForm.control}
                         name="lastName"
                         render={({ field }) => (
                           <FormItem>
@@ -245,112 +204,123 @@ const Auth = () => {
                         )}
                       />
                     </div>
+
                     <FormField
-                      control={signupForm.control}
+                      control={registerForm.control}
                       name="email"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="example@example.com" {...field} />
+                            <Input placeholder="your.email@example.com" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                    
                     <FormField
-                      control={signupForm.control}
+                      control={registerForm.control}
                       name="password"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <div className="relative">
-                              <Input
-                                type={showPassword ? "text" : "password"}
-                                placeholder="Create a password"
-                                {...field}
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="absolute right-0 top-0 h-full px-3"
-                                onClick={() => setShowPassword(!showPassword)}
-                              >
-                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                              </Button>
-                            </div>
+                            <Input type="password" placeholder="••••••••" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
                     <FormField
-                      control={signupForm.control}
-                      name="confirmPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Confirm Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="Confirm your password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={signupForm.control}
+                      control={registerForm.control}
                       name="role"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Account Type</FormLabel>
+                          <FormLabel>I am a...</FormLabel>
                           <FormControl>
                             <RadioGroup
+                              className="grid grid-cols-3 gap-2 pt-2"
+                              value={field.value}
                               onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="flex flex-col space-y-2"
                             >
-                              {roleOptions.map((role) => (
-                                <FormItem
-                                  key={role.value}
-                                  className="flex items-center space-x-3 space-y-0"
+                              <FormItem>
+                                <FormControl>
+                                  <RadioGroupItem
+                                    value="student"
+                                    id="student"
+                                    className="peer sr-only"
+                                  />
+                                </FormControl>
+                                <FormLabel
+                                  htmlFor="student"
+                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
                                 >
-                                  <FormControl>
-                                    <RadioGroupItem value={role.value} />
-                                  </FormControl>
-                                  <FormLabel className="font-normal flex items-center cursor-pointer">
-                                    <div className="mr-2">
-                                      {role.icon({ size: 18 })}
-                                    </div>
-                                    <div>
-                                      <div className="font-medium">{role.label}</div>
-                                      <div className="text-xs text-muted-foreground">{role.description}</div>
-                                    </div>
-                                  </FormLabel>
-                                </FormItem>
-                              ))}
+                                  <GraduationCap className="h-6 w-6 mb-2" />
+                                  Student
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem>
+                                <FormControl>
+                                  <RadioGroupItem
+                                    value="professor"
+                                    id="professor"
+                                    className="peer sr-only"
+                                  />
+                                </FormControl>
+                                <FormLabel
+                                  htmlFor="professor"
+                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                >
+                                  <UserRound className="h-6 w-6 mb-2" />
+                                  Teacher
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem>
+                                <FormControl>
+                                  <RadioGroupItem
+                                    value="ngo"
+                                    id="ngo"
+                                    className="peer sr-only"
+                                  />
+                                </FormControl>
+                                <FormLabel
+                                  htmlFor="ngo"
+                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                >
+                                  <Building2 className="h-6 w-6 mb-2" />
+                                  NGO
+                                </FormLabel>
+                              </FormItem>
                             </RadioGroup>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
                     <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? "Creating Account..." : "Create Account"}
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                          Creating account...
+                        </>
+                      ) : (
+                        "Create Account"
+                      )}
                     </Button>
                   </form>
                 </Form>
               </CardContent>
             </TabsContent>
-          </Tabs>
-          <CardFooter className="flex justify-center">
-            <p className="text-xs text-center text-muted-foreground">
+            
+            <CardFooter className="border-t border-sarathi-gray/30 p-4 text-center text-sm text-muted-foreground">
               By continuing, you agree to our Terms of Service and Privacy Policy
-            </p>
-          </CardFooter>
+            </CardFooter>
+          </Tabs>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 };

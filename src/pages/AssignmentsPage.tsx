@@ -7,13 +7,13 @@ import AssignmentsComponent from "@/components/Assignments";
 
 const AssignmentsPage = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, userRole } = useAuth();
+  const { profile } = useAuth();
 
   useEffect(() => {
-    if (!isLoggedIn || userRole !== "student") {
+    if (!profile || profile.role !== "student") {
       navigate("/");
     }
-  }, [isLoggedIn, navigate, userRole]);
+  }, [profile, navigate]);
 
   return (
     <div className="min-h-screen bg-sarathi-dark text-white">

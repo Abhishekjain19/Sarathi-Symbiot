@@ -12,15 +12,15 @@ const grades = ["4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th"
 
 const AssessmentPage = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, userRole } = useAuth();
+  const { profile } = useAuth();
   const [selectedSubject, setSelectedSubject] = useState<string>("Physics");
   const [selectedGrade, setSelectedGrade] = useState<string>("4th");
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!profile) {
       navigate("/");
     }
-  }, [isLoggedIn, navigate]);
+  }, [profile, navigate]);
 
   const handleBack = () => {
     navigate(-1);
@@ -41,7 +41,7 @@ const AssessmentPage = () => {
 
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Assessments</h1>
-          {userRole === "professor" && (
+          {profile?.role === "professor" && (
             <div className="flex gap-2">
               <Button 
                 variant="outline"
@@ -62,7 +62,7 @@ const AssessmentPage = () => {
           )}
         </div>
 
-        {userRole === "professor" && (
+        {profile?.role === "professor" && (
           <Card className="bg-sarathi-darkCard border-sarathi-gray/30 mb-6">
             <CardContent className="pt-6">
               <div className="grid grid-cols-2 gap-4 mb-4">
@@ -115,7 +115,7 @@ const AssessmentPage = () => {
           <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
             <CardContent className="pt-6">
               <p className="text-center text-muted-foreground">
-                {userRole === "professor" 
+                {profile?.role === "professor" 
                   ? "Select a grade and subject to view or create assessments"
                   : "No assessments available for your grade at the moment"}
               </p>

@@ -43,13 +43,13 @@ const recentUploads = [
 
 const ProfessorDashboard = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, userRole } = useAuth();
+  const { profile } = useAuth();
 
   useEffect(() => {
-    if (!isLoggedIn || userRole !== "professor") {
+    if (!profile || profile.role !== "professor") {
       navigate("/");
     }
-  }, [isLoggedIn, navigate, userRole]);
+  }, [profile, navigate]);
 
   return (
     <div className="min-h-screen bg-sarathi-dark text-white">

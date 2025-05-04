@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Users, Play, Circle, Filter } from "lucide-react";
@@ -6,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/context/AuthContext";
-import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -71,14 +71,14 @@ const grades = [
 
 const AllLectures = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, userRole } = useAuth();
+  const { profile } = useAuth();
   const [selectedGrade, setSelectedGrade] = useState<string>("all");
 
   useEffect(() => {
-    if (!isLoggedIn || userRole !== "professor") {
+    if (!profile || profile.role !== "professor") {
       navigate("/");
     }
-  }, [isLoggedIn, navigate, userRole]);
+  }, [profile, navigate]);
 
   const filteredLectures = selectedGrade !== "all"
     ? allLectures.filter(lecture => lecture.grade === selectedGrade)

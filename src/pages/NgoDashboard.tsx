@@ -49,14 +49,14 @@ const resourceUtilization = [
 
 const NgoDashboard = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, userRole } = useAuth();
+  const { profile } = useAuth();
   const [showMap, setShowMap] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!isLoggedIn || userRole !== "ngo") {
+    if (!profile || profile.role !== "ngo") {
       navigate("/");
     }
-  }, [isLoggedIn, navigate, userRole]);
+  }, [profile, navigate]);
 
   return (
     <div className="min-h-screen bg-sarathi-dark text-white">

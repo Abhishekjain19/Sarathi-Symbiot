@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { NavBar } from "@/components/NavBar";
@@ -38,13 +39,13 @@ const subjects = [
 
 const LearningHistory = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, userRole } = useAuth();
+  const { profile } = useAuth();
 
   useEffect(() => {
-    if (!isLoggedIn || userRole !== "student") {
+    if (!profile || profile.role !== "student") {
       navigate("/");
     }
-  }, [isLoggedIn, navigate, userRole]);
+  }, [profile, navigate]);
 
   return (
     <div className="min-h-screen bg-sarathi-dark text-white">

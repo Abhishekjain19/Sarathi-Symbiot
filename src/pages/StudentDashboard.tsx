@@ -66,15 +66,15 @@ const progressStats = [
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, userRole } = useAuth();
+  const { profile } = useAuth();
   const [selectedGrade, setSelectedGrade] = useState<string>("4th");
   const [showMap, setShowMap] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!isLoggedIn || userRole !== "student") {
+    if (!profile || profile.role !== "student") {
       navigate("/");
     }
-  }, [isLoggedIn, navigate, userRole]);
+  }, [profile, navigate]);
 
   // Filter lectures based on selected grade
   const filteredLectures = recentLectures.filter(

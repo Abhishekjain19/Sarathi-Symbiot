@@ -7,15 +7,13 @@ import { useAuth } from "@/context/AuthContext";
 
 const MapPage = () => {
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState(null);
+  const { profile } = useAuth();
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      navigate("/");
+    if (!profile) {
+      navigate("/auth");
     }
-  }, [isLoggedIn, navigate]);
+  }, [profile, navigate]);
 
   const handleBack = () => {
     navigate(-1);
