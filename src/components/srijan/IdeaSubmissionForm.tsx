@@ -112,8 +112,8 @@ export function IdeaSubmissionForm({
     const ideaData: IdeaDraft = {
       title: values.title,
       description: values.description,
-      media: mediaFile || undefined,
-      media_url: mediaFile ? undefined : values.mediaUrl
+      media_url: mediaFile ? undefined : values.mediaUrl,
+      media_file: mediaFile
     };
     
     submitIdea(ideaData);

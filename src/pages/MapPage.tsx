@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Info, MapPin, User, Search } from "lucide-react";
@@ -5,9 +6,20 @@ import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/context/AuthContext";
 
+type Location = {
+  id: string;
+  name: string;
+  address: string;
+  students: number;
+  latitude: number;
+  longitude: number;
+}
+
 const MapPage = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
   useEffect(() => {
     if (!profile) {

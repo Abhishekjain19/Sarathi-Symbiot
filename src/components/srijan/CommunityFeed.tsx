@@ -42,7 +42,7 @@ const badgeColors = {
 export const CommunityFeed = () => {
   const { profile } = useAuth();
   const { toast } = useToast();
-  const { ideas, isLoadingIdeas, updateIdeaStatus } = useIdeas();
+  const { ideas, loading: isLoadingIdeas, updateIdeaStatus } = useIdeas();
   const [searchQuery, setSearchQuery] = useState("");
   const [feedbackDrafts, setFeedbackDrafts] = useState<{ [key: string]: string }>({});
   const [activeTab, setActiveTab] = useState("all");

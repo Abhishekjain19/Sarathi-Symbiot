@@ -15,7 +15,7 @@ const SrijanIdeaHub = () => {
   const { isLoading, profile } = useAuth();
   const { toast } = useToast();
   const { 
-    submitIdea, 
+    addIdea: submitIdea, 
     currentChallenge,
     isLoadingChallenge,
     isOnline

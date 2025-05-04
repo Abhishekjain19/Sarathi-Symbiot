@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Flag, Star, Edit, X, Plus, CheckCheck, Shield } from "lucide-react";
 import { NavBar } from "@/components/NavBar";
@@ -52,7 +51,8 @@ const SrijanAdmin = () => {
   const { isLoading, profile } = useAuth();
   const { 
     ideas, 
-    isLoadingIdeas,
+    pendingIdeas,
+    loading: isLoadingIdeas,
     updateIdeaStatus,
     currentChallenge,
     createChallenge
@@ -72,9 +72,6 @@ const SrijanAdmin = () => {
     navigate("/");
     return null;
   }
-
-  // Filter ideas that are pending moderation
-  const pendingIdeas = ideas?.filter(idea => idea.status === 'pending') || [];
 
   return (
     <div className="min-h-screen bg-sarathi-dark text-white">

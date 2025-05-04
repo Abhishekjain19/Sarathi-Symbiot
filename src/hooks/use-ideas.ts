@@ -21,22 +21,52 @@ export interface Idea {
   };
 }
 
+export interface Challenge {
+  id: string;
+  title: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface IdeaDraft {
   title: string;
   description: string;
   media_url?: string | null;
-  status: "pending";
+  status?: "pending";
   challenge_id?: string | null;
   localId?: string;
+  media_file?: File;
 }
 
 export function useIdeas() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [ideaDrafts, setIdeaDrafts] = useState<IdeaDraft[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoadingIdeas, setIsLoadingIdeas] = useState(true);
   const [pendingIdeas, setPendingIdeas] = useState<Idea[]>([]);
+  const [currentChallenge, setCurrentChallenge] = useState<Challenge | null>(null);
+  const [isLoadingChallenge, setIsLoadingChallenge] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const { profile } = useAuth();
 
+  // Check online status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+  
   // Load offline stored drafts from localStorage
   useEffect(() => {
     const loadOfflineDrafts = () => {
@@ -61,10 +91,38 @@ export function useIdeas() {
     }
   }, [ideaDrafts]);
 
+  // Fetch current challenge
+  const fetchCurrentChallenge = async () => {
+    try {
+      setIsLoadingChallenge(true);
+      
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("challenges")
+        .select("*")
+        .lte("start_date", now)
+        .gte("end_date", now)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 means no rows returned, which is fine
+        console.error("Error fetching challenge:", error);
+      } else if (data) {
+        setCurrentChallenge(data as Challenge);
+      }
+    } catch (error: any) {
+      console.error("Error fetching challenge:", error.message);
+    } finally {
+      setIsLoadingChallenge(false);
+    }
+  };
+
   // Fetch ideas from Supabase
   const fetchIdeas = async () => {
     try {
-      setLoading(true);
+      setIsLoadingIdeas(true);
       
       const { data, error } = await supabase
         .from("ideas")
@@ -79,6 +137,7 @@ export function useIdeas() {
         throw error;
       }
       
+      // Type assertion to handle the Supabase response
       setIdeas(data as unknown as Idea[]);
     } catch (error: any) {
       console.error("Error fetching ideas:", error.message);
@@ -88,6 +147,7 @@ export function useIdeas() {
         variant: "destructive",
       });
     } finally {
+      setIsLoadingIdeas(false);
       setLoading(false);
     }
   };
@@ -110,6 +170,7 @@ export function useIdeas() {
         throw error;
       }
       
+      // Type assertion to handle the Supabase response
       setPendingIdeas(data as unknown as Idea[]);
     } catch (error: any) {
       console.error("Error fetching pending ideas:", error.message);
@@ -122,6 +183,7 @@ export function useIdeas() {
     const draftWithId = {
       ...newIdea,
       localId: Date.now().toString(),
+      status: "pending" as const,
     };
     
     // Add to local drafts
@@ -135,6 +197,38 @@ export function useIdeas() {
         title: "Saved locally",
         description: "Your idea will be submitted when you're back online",
       });
+    }
+  };
+
+  // Create new challenge (for NGO users)
+  const createChallenge = async (challenge: Omit<Challenge, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!profile || profile.role !== "ngo") return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from("challenges")
+        .insert([
+          {
+            ...challenge,
+            created_by: profile.id,
+          }
+        ])
+        .select();
+        
+      if (error) {
+        throw error;
+      }
+      
+      fetchCurrentChallenge();
+      return data[0] as Challenge;
+    } catch (error: any) {
+      console.error("Error creating challenge:", error.message);
+      toast({
+        title: "Error creating challenge",
+        description: error.message,
+        variant: "destructive",
+      });
+      return null;
     }
   };
 
@@ -184,19 +278,19 @@ export function useIdeas() {
   };
 
   // Update idea status (for NGO moderation)
-  const updateIdeaStatus = async (ideaId: string, status: "approved" | "rejected") => {
+  const updateIdeaStatus = async ({ id, status }: { id: string, status: "approved" | "rejected" }) => {
     try {
       const { error } = await supabase
         .from("ideas")
         .update({ status })
-        .eq("id", ideaId);
+        .eq("id", id);
         
       if (error) {
         throw error;
       }
       
       // Update local state
-      setPendingIdeas(prev => prev.filter(idea => idea.id !== ideaId));
+      setPendingIdeas(prev => prev.filter(idea => idea.id !== id));
       
       if (status === "approved") {
         fetchIdeas(); // Refresh approved ideas
@@ -219,12 +313,13 @@ export function useIdeas() {
   // Effect to fetch ideas on component mount and when profile changes
   useEffect(() => {
     fetchIdeas();
+    fetchCurrentChallenge();
     
     if (profile?.role === "ngo") {
       fetchPendingIdeas();
     }
     
-    // Set up online/offline detection
+    // Set up online/offline detection for syncing
     const handleOnline = () => {
       if (ideaDrafts.length > 0) {
         syncIdeas();
@@ -238,12 +333,21 @@ export function useIdeas() {
     };
   }, [profile]);
 
+  // Alias submitIdea to addIdea for backwards compatibility
+  const submitIdea = addIdea;
+
   return {
     ideas,
     pendingIdeas,
     loading,
+    isLoadingIdeas,
     addIdea,
+    submitIdea,
     updateIdeaStatus,
     ideaDrafts: ideaDrafts.length,
+    currentChallenge,
+    isLoadingChallenge,
+    createChallenge,
+    isOnline
   };
 }
