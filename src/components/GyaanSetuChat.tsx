@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 
 // Types for messages and tools
-type MessageRole = "user" | "assistant";
+export type MessageRole = "user" | "assistant";
 
 interface QuizQuestion {
   question: string;
