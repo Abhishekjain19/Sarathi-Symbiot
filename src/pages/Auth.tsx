@@ -12,18 +12,19 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Loader2, UserRound, Building2, GraduationCap } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from "@/components/ui/use-toast";
 
-// Define schemas for form validation
+// Define schemas for form validation - only validating email format
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  password: z.string().min(1, { message: "Password is required" }),
 });
 
 const registerSchema = z.object({
   firstName: z.string().min(1, { message: "First name is required" }),
   lastName: z.string().min(1, { message: "Last name is required" }),
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  password: z.string().min(1, { message: "Password is required" }),
   role: z.enum(["student", "professor", "ngo"], { 
     required_error: "Please select a role",
   }),
@@ -58,22 +59,29 @@ const Auth = () => {
     },
   });
 
-  // Handle login submission
+  // Handle login submission - simplified to just validate email format
   const onLoginSubmit = async (data: LoginFormValues) => {
     try {
       setIsLoading(true);
+      // Simply pass the form data to signIn without additional checks
       await signIn(data.email, data.password);
-      // Navigate happens in the auth context
+      // Navigation is handled in the auth context
     } catch (error) {
       console.error("Login failed:", error);
       setIsLoading(false);
+      toast({
+        title: "Login failed",
+        description: "Please check your email and password",
+        variant: "destructive",
+      });
     }
   };
 
-  // Handle registration submission
+  // Handle registration submission - simplified to just validate email format
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     try {
       setIsLoading(true);
+      // Simply pass the form data to signUp without additional checks
       await signUp(
         data.email, 
         data.password, 
@@ -81,10 +89,19 @@ const Auth = () => {
         data.firstName, 
         data.lastName
       );
-      // Registration success is handled in the auth context
+      toast({
+        title: "Account created",
+        description: "You can now log in with your credentials",
+      });
+      setIsLoading(false);
     } catch (error) {
       console.error("Registration failed:", error);
       setIsLoading(false);
+      toast({
+        title: "Registration failed",
+        description: "Please try again",
+        variant: "destructive",
+      });
     }
   };
 
@@ -106,7 +123,7 @@ const Auth = () => {
     <div className="min-h-screen bg-sarathi-dark flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary">Navigator</h1>
+          <h1 className="text-3xl font-bold text-primary">Sarathi</h1>
           <p className="text-muted-foreground mt-2">Your gateway to accessible education</p>
         </div>
 
