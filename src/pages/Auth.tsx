@@ -18,6 +18,9 @@ import { toast } from "@/components/ui/use-toast";
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(1, { message: "Password is required" }),
+  role: z.enum(["student", "professor", "ngo"], { 
+    required_error: "Please select your role",
+  }),
 });
 
 const registerSchema = z.object({
@@ -44,6 +47,7 @@ const Auth = () => {
     defaultValues: {
       email: "",
       password: "",
+      role: "student",
     },
   });
 
@@ -63,8 +67,8 @@ const Auth = () => {
   const onLoginSubmit = async (data: LoginFormValues) => {
     try {
       setIsLoading(true);
-      // Simply pass the form data to signIn without additional checks
-      await signIn(data.email, data.password);
+      // Pass the role to the signIn function
+      await signIn(data.email, data.password, data.role);
       // Navigation is handled in the auth context
     } catch (error) {
       console.error("Login failed:", error);
@@ -102,20 +106,6 @@ const Auth = () => {
         description: "Please try again",
         variant: "destructive",
       });
-    }
-  };
-
-  // Role icons for the registration form
-  const RoleIcon = ({ role }: { role: string }) => {
-    switch (role) {
-      case "student":
-        return <GraduationCap className="h-6 w-6" />;
-      case "professor":
-        return <UserRound className="h-6 w-6" />;
-      case "ngo":
-        return <Building2 className="h-6 w-6" />;
-      default:
-        return null;
     }
   };
 
@@ -169,6 +159,75 @@ const Auth = () => {
                         </FormItem>
                       )}
                     />
+                    
+                    {/* Role selection for login */}
+                    <FormField
+                      control={loginForm.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>I am logging in as...</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              className="grid grid-cols-3 gap-2 pt-2"
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
+                              <FormItem>
+                                <FormControl>
+                                  <RadioGroupItem
+                                    value="student"
+                                    id="login-student"
+                                    className="peer sr-only"
+                                  />
+                                </FormControl>
+                                <FormLabel
+                                  htmlFor="login-student"
+                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                >
+                                  <GraduationCap className="h-6 w-6 mb-2" />
+                                  Student
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem>
+                                <FormControl>
+                                  <RadioGroupItem
+                                    value="professor"
+                                    id="login-professor"
+                                    className="peer sr-only"
+                                  />
+                                </FormControl>
+                                <FormLabel
+                                  htmlFor="login-professor"
+                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                >
+                                  <UserRound className="h-6 w-6 mb-2" />
+                                  Teacher
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem>
+                                <FormControl>
+                                  <RadioGroupItem
+                                    value="ngo"
+                                    id="login-ngo"
+                                    className="peer sr-only"
+                                  />
+                                </FormControl>
+                                <FormLabel
+                                  htmlFor="login-ngo"
+                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                                >
+                                  <Building2 className="h-6 w-6 mb-2" />
+                                  NGO
+                                </FormLabel>
+                              </FormItem>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <Button type="submit" className="w-full" disabled={isLoading}>
                       {isLoading ? (
                         <>

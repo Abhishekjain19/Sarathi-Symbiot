@@ -19,7 +19,7 @@ type AuthContextType = {
   profile: Profile | null;
   session: Session | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, role: "student" | "professor" | "ngo") => Promise<void>;
   signUp: (email: string, password: string, role: "student" | "professor" | "ngo", firstName: string, lastName: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
@@ -99,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Sign in with email and password - simplified
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, role: "student" | "professor" | "ngo") => {
     try {
       // Attempt real authentication first
       const { error, data } = await supabase.auth.signInWithPassword({
@@ -121,12 +121,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           user_metadata: {
             first_name: localStorage.getItem(`${email}_firstName`) || "User",
             last_name: localStorage.getItem(`${email}_lastName`) || "",
-            role: localStorage.getItem(`${email}_role`) || "student",
+            role: role, // Use the provided role
           },
         } as unknown as User;
         
         // Store user details in localStorage
         localStorage.setItem(`sarathi_mock_user`, JSON.stringify(mockUser));
+        
+        // Store role for this email
+        localStorage.setItem(`${email}_role`, role);
         
         // Set the mock user and profile
         setUser(mockUser);
@@ -134,11 +137,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: mockUserId,
           first_name: localStorage.getItem(`${email}_firstName`) || "User",
           last_name: localStorage.getItem(`${email}_lastName`) || "",
-          role: (localStorage.getItem(`${email}_role`) as "student" | "professor" | "ngo") || "student",
+          role: role, // Use the provided role
         });
         
         // Redirect based on role
-        const role = localStorage.getItem(`${email}_role`) || "student";
         if (role === "student") {
           navigate("/student-dashboard");
         } else if (role === "professor") {
