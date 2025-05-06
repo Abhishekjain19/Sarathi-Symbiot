@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -161,7 +160,7 @@ export function useIdeas() {
         .from("ideas")
         .select(`
           *,
-          profiles:user_id(first_name, last_name)
+          profiles(first_name, last_name)
         `)
         .eq("status", "pending")
         .order("created_at", { ascending: false });

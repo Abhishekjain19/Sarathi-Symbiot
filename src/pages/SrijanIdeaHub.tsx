@@ -22,6 +22,7 @@ const SrijanIdeaHub = () => {
   } = useIdeas();
   const [activeTab, setActiveTab] = useState<string>("feed");
 
+  // Handle authentication loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-sarathi-dark flex items-center justify-center">
@@ -29,6 +30,13 @@ const SrijanIdeaHub = () => {
       </div>
     );
   }
+
+  // If not authenticated, redirect to auth page
+  useEffect(() => {
+    if (!isLoading && !profile) {
+      navigate("/auth");
+    }
+  }, [isLoading, profile, navigate]);
 
   return (
     <div className="min-h-screen bg-sarathi-dark text-white">

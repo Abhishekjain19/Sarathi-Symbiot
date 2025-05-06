@@ -135,7 +135,7 @@ export const CommunityFeed = () => {
               </CardTitle>
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 <span className="text-sm text-muted-foreground">
-                  By {idea.profiles?.first_name} {idea.profiles?.last_name} • {formatDate(idea.created_at)}
+                  By {idea.profiles?.first_name || "Anonymous"} {idea.profiles?.last_name || ""} • {formatDate(idea.created_at)}
                 </span>
                 {badges.map((badge) => {
                   const BadgeIcon = badgeIcons[badge];
