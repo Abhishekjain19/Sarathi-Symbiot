@@ -14,9 +14,9 @@ export interface Idea {
   challenge_id: string | null;
   created_at: string;
   updated_at: string;
-  profiles: {
-    first_name: string;
-    last_name: string;
+  profiles?: {
+    first_name: string | null;
+    last_name: string | null;
   };
 }
 
@@ -123,6 +123,7 @@ export function useIdeas() {
     try {
       setIsLoadingIdeas(true);
       
+      // Updated query format to match Supabase's join syntax
       const { data, error } = await supabase
         .from("ideas")
         .select(`
@@ -156,11 +157,12 @@ export function useIdeas() {
     if (profile?.role !== "ngo") return;
     
     try {
+      // Updated query format to match Supabase's join syntax
       const { data, error } = await supabase
         .from("ideas")
         .select(`
           *,
-          profiles(first_name, last_name)
+          profiles:user_id(first_name, last_name)
         `)
         .eq("status", "pending")
         .order("created_at", { ascending: false });
