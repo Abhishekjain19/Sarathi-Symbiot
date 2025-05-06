@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -14,6 +15,7 @@ export interface Idea {
   challenge_id: string | null;
   created_at: string;
   updated_at: string;
+  // Make profiles optional to handle cases where join might not work
   profiles?: {
     first_name: string | null;
     last_name: string | null;
@@ -123,13 +125,10 @@ export function useIdeas() {
     try {
       setIsLoadingIdeas(true);
       
-      // Updated query format to match Supabase's join syntax
-      const { data, error } = await supabase
+      // Modified query to avoid using relationships
+      const { data: ideasData, error } = await supabase
         .from("ideas")
-        .select(`
-          *,
-          profiles:user_id(first_name, last_name)
-        `)
+        .select("*")
         .eq("status", "approved")
         .order("created_at", { ascending: false });
         
@@ -137,8 +136,38 @@ export function useIdeas() {
         throw error;
       }
       
-      // Type assertion to handle the Supabase response
-      setIdeas(data as unknown as Idea[]);
+      // If we have ideas, fetch profiles for each idea
+      if (ideasData && ideasData.length > 0) {
+        // Get unique user IDs to batch fetch profiles
+        const userIds = [...new Set(ideasData.map(idea => idea.user_id))];
+        
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .in("id", userIds);
+          
+        if (profilesError) {
+          console.error("Error fetching profiles:", profilesError.message);
+          // Continue anyway, we'll show ideas without profiles
+        }
+        
+        // Create a map of user_id to profile data for quick lookup
+        const profileMap = profilesData ? profilesData.reduce((map, profile) => {
+          map[profile.id] = profile;
+          return map;
+        }, {}) : {};
+        
+        // Combine ideas with their profiles
+        const ideasWithProfiles = ideasData.map(idea => ({
+          ...idea,
+          profiles: profileMap[idea.user_id] || { first_name: null, last_name: null }
+        }));
+        
+        setIdeas(ideasWithProfiles);
+      } else {
+        setIdeas([]);
+      }
     } catch (error: any) {
       console.error("Error fetching ideas:", error.message);
       toast({
@@ -157,13 +186,10 @@ export function useIdeas() {
     if (profile?.role !== "ngo") return;
     
     try {
-      // Updated query format to match Supabase's join syntax
-      const { data, error } = await supabase
+      // Modified query to avoid using relationships
+      const { data: pendingData, error } = await supabase
         .from("ideas")
-        .select(`
-          *,
-          profiles:user_id(first_name, last_name)
-        `)
+        .select("*")
         .eq("status", "pending")
         .order("created_at", { ascending: false });
         
@@ -171,8 +197,38 @@ export function useIdeas() {
         throw error;
       }
       
-      // Type assertion to handle the Supabase response
-      setPendingIdeas(data as unknown as Idea[]);
+      // If we have pending ideas, fetch profiles for each
+      if (pendingData && pendingData.length > 0) {
+        // Get unique user IDs to batch fetch profiles
+        const userIds = [...new Set(pendingData.map(idea => idea.user_id))];
+        
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .in("id", userIds);
+          
+        if (profilesError) {
+          console.error("Error fetching profiles:", profilesError.message);
+          // Continue anyway, we'll show ideas without profiles
+        }
+        
+        // Create a map of user_id to profile data for quick lookup
+        const profileMap = profilesData ? profilesData.reduce((map, profile) => {
+          map[profile.id] = profile;
+          return map;
+        }, {}) : {};
+        
+        // Combine ideas with their profiles
+        const pendingWithProfiles = pendingData.map(idea => ({
+          ...idea,
+          profiles: profileMap[idea.user_id] || { first_name: null, last_name: null }
+        }));
+        
+        setPendingIdeas(pendingWithProfiles);
+      } else {
+        setPendingIdeas([]);
+      }
     } catch (error: any) {
       console.error("Error fetching pending ideas:", error.message);
     }
