@@ -5,6 +5,7 @@ import {
   Card, 
   CardContent,
 } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Types for messages and tools
 export type MessageRole = "user" | "assistant";
@@ -102,50 +103,52 @@ export const GyaanSetuChat: React.FC<GyaanSetuChatProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto py-4 space-y-6">
-      {messages.map((message) => (
-        <div 
-          key={message.id} 
-          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-        >
+    <ScrollArea className="h-full w-full">
+      <div className="flex-1 py-4 space-y-6 pr-4">
+        {messages.map((message) => (
           <div 
-            className={`max-w-[85%] ${
-              message.role === 'user' 
-                ? 'bg-primary/20 rounded-t-2xl rounded-l-2xl' 
-                : 'bg-sarathi-darkCard rounded-t-2xl rounded-r-2xl'
-            } p-4`}
+            key={message.id} 
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-medium">
-                {message.role === 'user' ? 'You' : 'GyaanSetu'}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {formatTime(message.timestamp)}
-              </span>
-            </div>
-            
-            <p className="whitespace-pre-wrap">{message.content}</p>
-            
-            {message.toolResult && (
-              <div className="mt-3">
-                {message.toolResult.type === 'quiz' && renderQuiz(message.toolResult.content as QuizQuestion[])}
-                {message.toolResult.type === 'flashcard' && renderFlashcards(message.toolResult.content as Flashcard[])}
+            <div 
+              className={`max-w-[85%] ${
+                message.role === 'user' 
+                  ? 'bg-primary/20 rounded-t-2xl rounded-l-2xl' 
+                  : 'bg-sarathi-darkCard rounded-t-2xl rounded-r-2xl'
+              } p-4`}
+            >
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs font-medium">
+                  {message.role === 'user' ? 'You' : 'GyaanSetu'}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {formatTime(message.timestamp)}
+                </span>
               </div>
-            )}
+              
+              <p className="whitespace-pre-wrap">{message.content}</p>
+              
+              {message.toolResult && (
+                <div className="mt-3">
+                  {message.toolResult.type === 'quiz' && renderQuiz(message.toolResult.content as QuizQuestion[])}
+                  {message.toolResult.type === 'flashcard' && renderFlashcards(message.toolResult.content as Flashcard[])}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
-      {isLoading && (
-        <div className="flex justify-start">
-          <Card className="max-w-[85%] bg-sarathi-darkCard border-sarathi-gray/30">
-            <CardContent className="p-4 flex items-center gap-3">
-              <Loader size={16} className="animate-spin" />
-              <p>GyaanSetu is thinking...</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      <div ref={messagesEndRef} />
-    </div>
+        ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <Card className="max-w-[85%] bg-sarathi-darkCard border-sarathi-gray/30">
+              <CardContent className="p-4 flex items-center gap-3">
+                <Loader size={16} className="animate-spin" />
+                <p>GyaanSetu is thinking...</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+    </ScrollArea>
   );
 };
