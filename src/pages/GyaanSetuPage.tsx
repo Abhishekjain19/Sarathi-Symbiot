@@ -112,52 +112,93 @@ const GyaanSetuPage = () => {
     }
   };
 
+  // Improved voice initialization
   useEffect(() => {
     if (!profile) {
       navigate("/auth");
     }
   }, [profile, navigate]);
 
-  // Force load speech synthesis voices immediately and perform advanced preloading
+  // Enhanced speech synthesis voice loading with robust error handling
   useEffect(() => {
     const initVoices = () => {
-      if (typeof window !== "undefined" && window.speechSynthesis) {
-        // Get voices and force initialization
-        let voices = speechSynthesis.getVoices();
-        
-        // If voices are already available, log them
-        if (voices.length > 0) {
-          console.log("Voices already loaded:", voices.length);
+      try {
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+          console.log("Initializing speech synthesis...");
           
-          // Create a silent test utterance to initialize the speech engine
-          const testUtterance = new SpeechSynthesisUtterance(" ");
-          testUtterance.volume = 0;
-          speechSynthesis.speak(testUtterance);
-          speechSynthesis.cancel();
+          // Force load voices
+          let voices = window.speechSynthesis.getVoices();
           
-          return;
+          // If voices are already available, prepare the speech engine
+          if (voices.length > 0) {
+            console.log(`Voices already loaded: ${voices.length}`);
+            
+            // Create a silent test utterance with zero volume to initialize the speech engine
+            try {
+              const testUtterance = new SpeechSynthesisUtterance(" ");
+              testUtterance.volume = 0;
+              testUtterance.onend = () => console.log("Test utterance completed");
+              testUtterance.onerror = (e) => console.error("Test utterance error:", e);
+              
+              // Speaking and immediately canceling helps initialize the engine
+              window.speechSynthesis.speak(testUtterance);
+              window.speechSynthesis.cancel();
+              
+              console.log("Speech engine initialized");
+            } catch (err) {
+              console.error("Error in test utterance:", err);
+            }
+            
+            return;
+          }
+          
+          // Add voice changed event listener if voices aren't loaded yet
+          window.speechSynthesis.onvoiceschanged = () => {
+            try {
+              voices = window.speechSynthesis.getVoices();
+              console.log(`Voices loaded: ${voices.length}`);
+              console.log("Available voices:", voices.map(v => ({
+                name: v.name,
+                lang: v.lang,
+                default: v.default ? "Yes" : "No"
+              })));
+              
+              // Initialize the engine with a test utterance
+              const testUtterance = new SpeechSynthesisUtterance(" ");
+              testUtterance.volume = 0;
+              window.speechSynthesis.speak(testUtterance);
+              window.speechSynthesis.cancel();
+            } catch (err) {
+              console.error("Error in onvoiceschanged:", err);
+            }
+          };
+          
+          // Force voices to load with multiple attempts
+          try {
+            // First attempt with empty utterance
+            const forceUtterance = new SpeechSynthesisUtterance(" ");
+            forceUtterance.volume = 0;
+            window.speechSynthesis.speak(forceUtterance);
+            window.speechSynthesis.cancel();
+            
+            // Second attempt with a different approach
+            setTimeout(() => {
+              if (window.speechSynthesis.getVoices().length === 0) {
+                console.log("Trying second voice loading method...");
+                window.speechSynthesis.cancel();
+                const forceUtterance2 = new SpeechSynthesisUtterance("test");
+                forceUtterance2.volume = 0;
+                forceUtterance2.rate = 0;
+                window.speechSynthesis.speak(forceUtterance2);
+                window.speechSynthesis.cancel();
+              }
+            }, 500);
+          } catch (err) {
+            console.error("Error forcing voice load:", err);
+          }
         }
-        
-        // Add voice changed event listener if voices aren't loaded yet
-        speechSynthesis.onvoiceschanged = () => {
-          voices = speechSynthesis.getVoices();
-          console.log("Available voices:", voices.map(v => ({
-            name: v.name,
-            lang: v.lang
-          })));
-          
-          // Create a silent test utterance to initialize the speech engine
-          const testUtterance = new SpeechSynthesisUtterance(" ");
-          testUtterance.volume = 0;
-          speechSynthesis.speak(testUtterance);
-          speechSynthesis.cancel();
-        };
-        
-        // Try to force voices to load with a silent utterance
-        const forceUtterance = new SpeechSynthesisUtterance(" ");
-        forceUtterance.volume = 0;
-        speechSynthesis.speak(forceUtterance);
-        speechSynthesis.cancel();
+      } catch (err) {
+        console.error("Critical error initializing speech:", err);
       }
     };
     
@@ -167,18 +208,42 @@ const GyaanSetuPage = () => {
     // Re-initialize on tab activation to handle browser quirks
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
+        console.log("Tab became visible, re-initializing voices");
         initVoices();
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
+    // Handle potential errors with speechSynthesis
+    const checkSynthesisState = () => {
+      try {
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+          // If speech is paused for too long, it might get stuck
+          if (window.speechSynthesis.paused && !document.hidden) {
+            console.log("Detected potentially stuck paused state, resetting...");
+            window.speechSynthesis.cancel();
+          }
+        }
+      } catch (err) {
+        console.error("Error checking synthesis state:", err);
+      }
+    };
+    
+    // Periodically check if speech synthesis is in a stuck state
+    const intervalId = setInterval(checkSynthesisState, 10000);
+    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(intervalId);
       
       // Clean up any ongoing speech when component unmounts
       if (typeof window !== "undefined" && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+        try {
+          window.speechSynthesis.cancel();
+        } catch (err) {
+          console.error("Error canceling speech on unmount:", err);
+        }
       }
     };
   }, []);

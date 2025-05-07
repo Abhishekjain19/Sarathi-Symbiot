@@ -37,6 +37,7 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const isSpeechPausedRef = useRef<boolean>(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -175,6 +176,10 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
     
+    // Reset state
+    isSpeechPausedRef.current = false;
+    setIsPlaying(false);
+    
     // Create speech synthesis utterance
     const utterance = new SpeechSynthesisUtterance(text);
     speechSynthRef.current = utterance;
@@ -197,15 +202,15 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
         break;
     }
     
-    // Find an appropriate voice
+    // Find an appropriate voice with improved matching
     let selectedVoice = null;
     
     // First try to find an exact match for language and gender
-    // Improved male voice detection with more keywords
+    // Enhanced male voice detection with broader keywords
     selectedVoice = voices.find(v => 
       v.lang.startsWith(voiceLangPrefix) && 
-      ((voice === "female" && /female|woman|girl/i.test(v.name)) || 
-       (voice === "male" && /male|man|guy|boy/i.test(v.name)))
+      ((voice === "female" && /female|woman|girl|f\s/i.test(v.name.toLowerCase())) || 
+       (voice === "male" && /male|man|guy|boy|m\s/i.test(v.name.toLowerCase())))
     );
     
     // If no specific gender match, try just language match
@@ -217,8 +222,8 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
     if (!selectedVoice && language !== "english") {
       selectedVoice = voices.find(v => 
         v.lang.startsWith("en") && 
-        ((voice === "female" && /female|woman|girl/i.test(v.name)) || 
-         (voice === "male" && /male|man|guy|boy/i.test(v.name)))
+        ((voice === "female" && /female|woman|girl|f\s/i.test(v.name.toLowerCase())) || 
+         (voice === "male" && /male|man|guy|boy|m\s/i.test(v.name.toLowerCase())))
       );
     }
     
@@ -234,14 +239,14 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
       console.warn("No suitable voice found, using default voice");
     }
     
-    // Enhanced voice characteristics - especially for male voice
+    // Further enhanced voice characteristics for more distinct male/female voices
     if (voice === "female") {
-      utterance.pitch = 1.1;
-      utterance.rate = 1.0;
+      utterance.pitch = 1.2;  // Slightly higher for female
+      utterance.rate = 1.0;   // Normal rate
     } else {
-      // Even more significantly lowered pitch and slower rate for more masculine sound
-      utterance.pitch = 0.5;  // Further reduced for stronger male voice
-      utterance.rate = 0.9;   // Slower for more distinct male voice
+      // Even more significantly lowered pitch for male voice
+      utterance.pitch = 0.3;  // Much lower for stronger male voice distinction
+      utterance.rate = 0.9;   // Slightly slower for more distinct male voice
     }
     
     // Create a blob for download capability
@@ -250,14 +255,34 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
     );
     setAudioUrl(blobURL);
     
-    // Event handlers
+    // Event handlers with improved state tracking
+    utterance.onstart = () => {
+      setIsPlaying(true);
+      console.log("Speech started");
+    };
+    
     utterance.onend = () => {
       setIsPlaying(false);
+      isSpeechPausedRef.current = false;
+      console.log("Speech ended");
+    };
+    
+    utterance.onpause = () => {
+      setIsPlaying(false);
+      isSpeechPausedRef.current = true;
+      console.log("Speech paused");
+    };
+    
+    utterance.onresume = () => {
+      setIsPlaying(true);
+      isSpeechPausedRef.current = false;
+      console.log("Speech resumed");
     };
     
     utterance.onerror = (event) => {
       console.error("Speech synthesis error:", event);
       setIsPlaying(false);
+      isSpeechPausedRef.current = false;
       toast({
         title: "Speech Error",
         description: "There was an error playing the audio",
@@ -270,23 +295,37 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
     setIsPlaying(true);
   };
 
-  // Enhanced togglePlayback function with proper pause/resume handling
+  // Completely redesigned togglePlayback function to fix pause/resume issues
   const togglePlayback = () => {
     if (!summary) return;
     
+    // Log current state for debugging
+    console.log("Current state:", { 
+      isPlaying, 
+      isPaused: isSpeechPausedRef.current,
+      synthSpeaking: window.speechSynthesis.speaking,
+      synthPaused: window.speechSynthesis.paused
+    });
+    
     if (isPlaying) {
-      // Stop the speech synthesis
+      // Currently playing, so pause
       window.speechSynthesis.pause();
+      isSpeechPausedRef.current = true;
       setIsPlaying(false);
+      console.log("Pausing speech");
     } else {
-      // If previously paused, resume, otherwise start new
-      if (speechSynthRef.current && window.speechSynthesis.paused) {
+      // Not playing - either need to resume or start new
+      if (window.speechSynthesis.paused) {
+        // Resume paused speech
         window.speechSynthesis.resume();
-      } else if (summary) {
-        // If not paused and not playing, start new speech
+        isSpeechPausedRef.current = false;
+        setIsPlaying(true);
+        console.log("Resuming speech");
+      } else {
+        // Nothing is playing or paused, start new speech
+        console.log("Starting new speech");
         generateSpeech(summary);
       }
-      setIsPlaying(true);
     }
   };
 
@@ -302,6 +341,15 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
     element.click();
     document.body.removeChild(element);
   };
+
+  // Add a cleanup effect to ensure speech synthesis is properly canceled when component unmounts
+  React.useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   return (
     <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
