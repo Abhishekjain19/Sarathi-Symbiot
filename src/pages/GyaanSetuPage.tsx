@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavBar } from "@/components/NavBar";
@@ -118,16 +119,37 @@ const GyaanSetuPage = () => {
   }, [profile, navigate]);
 
   useEffect(() => {
-    // Load speech synthesis voices when the component mounts
-    // This is necessary for some browsers, especially Chrome
+    // Enhanced voice loading logic
     if (typeof window !== "undefined" && window.speechSynthesis) {
       // Force loading of voices
-      speechSynthesis.getVoices();
+      const voices = speechSynthesis.getVoices();
       
-      // Set up event listener for when voices are loaded
-      speechSynthesis.onvoiceschanged = () => {
-        console.log("Voices loaded:", speechSynthesis.getVoices().length);
-      };
+      if (voices.length === 0) {
+        // Set up event listener for when voices are loaded
+        speechSynthesis.onvoiceschanged = () => {
+          const availableVoices = speechSynthesis.getVoices();
+          console.log("Voices loaded:", availableVoices.length);
+          
+          // Log available male voices for debugging
+          const maleVoices = availableVoices.filter(v => 
+            /male|man|guy|boy/i.test(v.name)
+          );
+          console.log("Available male voices:", maleVoices.map(v => v.name));
+          
+          // Initialize voice test to ensure proper loading
+          if (availableVoices.length > 0) {
+            const testUtterance = new SpeechSynthesisUtterance("Voice initialized");
+            testUtterance.volume = 0; // Silent test
+            speechSynthesis.speak(testUtterance);
+            speechSynthesis.cancel(); // Cancel immediately
+          }
+        };
+      } else {
+        // If voices are already loaded, log them
+        console.log("Voices already loaded:", voices.length);
+        const maleVoices = voices.filter(v => /male|man|guy|boy/i.test(v.name));
+        console.log("Available male voices:", maleVoices.map(v => v.name));
+      }
     }
   }, []);
 
