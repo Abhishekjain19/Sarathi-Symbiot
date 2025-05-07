@@ -118,39 +118,69 @@ const GyaanSetuPage = () => {
     }
   }, [profile, navigate]);
 
+  // Force load speech synthesis voices immediately and perform advanced preloading
   useEffect(() => {
-    // Enhanced voice loading logic
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      // Force loading of voices
-      const voices = speechSynthesis.getVoices();
-      
-      if (voices.length === 0) {
-        // Set up event listener for when voices are loaded
+    const initVoices = () => {
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        // Get voices and force initialization
+        let voices = speechSynthesis.getVoices();
+        
+        // If voices are already available, log them
+        if (voices.length > 0) {
+          console.log("Voices already loaded:", voices.length);
+          
+          // Create a silent test utterance to initialize the speech engine
+          const testUtterance = new SpeechSynthesisUtterance(" ");
+          testUtterance.volume = 0;
+          speechSynthesis.speak(testUtterance);
+          speechSynthesis.cancel();
+          
+          return;
+        }
+        
+        // Add voice changed event listener if voices aren't loaded yet
         speechSynthesis.onvoiceschanged = () => {
-          const availableVoices = speechSynthesis.getVoices();
-          console.log("Voices loaded:", availableVoices.length);
+          voices = speechSynthesis.getVoices();
+          console.log("Available voices:", voices.map(v => ({
+            name: v.name,
+            lang: v.lang
+          })));
           
-          // Log available male voices for debugging
-          const maleVoices = availableVoices.filter(v => 
-            /male|man|guy|boy/i.test(v.name)
-          );
-          console.log("Available male voices:", maleVoices.map(v => v.name));
-          
-          // Initialize voice test to ensure proper loading
-          if (availableVoices.length > 0) {
-            const testUtterance = new SpeechSynthesisUtterance("Voice initialized");
-            testUtterance.volume = 0; // Silent test
-            speechSynthesis.speak(testUtterance);
-            speechSynthesis.cancel(); // Cancel immediately
-          }
+          // Create a silent test utterance to initialize the speech engine
+          const testUtterance = new SpeechSynthesisUtterance(" ");
+          testUtterance.volume = 0;
+          speechSynthesis.speak(testUtterance);
+          speechSynthesis.cancel();
         };
-      } else {
-        // If voices are already loaded, log them
-        console.log("Voices already loaded:", voices.length);
-        const maleVoices = voices.filter(v => /male|man|guy|boy/i.test(v.name));
-        console.log("Available male voices:", maleVoices.map(v => v.name));
+        
+        // Try to force voices to load with a silent utterance
+        const forceUtterance = new SpeechSynthesisUtterance(" ");
+        forceUtterance.volume = 0;
+        speechSynthesis.speak(forceUtterance);
+        speechSynthesis.cancel();
       }
-    }
+    };
+    
+    // Initialize voices
+    initVoices();
+    
+    // Re-initialize on tab activation to handle browser quirks
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        initVoices();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      
+      // Clean up any ongoing speech when component unmounts
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
   }, []);
 
   return (

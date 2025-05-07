@@ -215,7 +215,6 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
     
     // If still no match, fall back to any English voice with the right gender
     if (!selectedVoice && language !== "english") {
-      // Improved male voice detection with more keywords
       selectedVoice = voices.find(v => 
         v.lang.startsWith("en") && 
         ((voice === "female" && /female|woman|girl/i.test(v.name)) || 
@@ -235,14 +234,14 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
       console.warn("No suitable voice found, using default voice");
     }
     
-    // Set gender-specific pitch and rate (enhanced male voice characteristics)
+    // Enhanced voice characteristics - especially for male voice
     if (voice === "female") {
       utterance.pitch = 1.1;
       utterance.rate = 1.0;
     } else {
-      // Lower pitch and slightly slower rate for more masculine sound
-      utterance.pitch = 0.6;  // More significantly lowered for male voice
-      utterance.rate = 0.95;  // Slightly slower for male voice
+      // Even more significantly lowered pitch and slower rate for more masculine sound
+      utterance.pitch = 0.5;  // Further reduced for stronger male voice
+      utterance.rate = 0.9;   // Slower for more distinct male voice
     }
     
     // Create a blob for download capability
@@ -271,19 +270,23 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
     setIsPlaying(true);
   };
 
+  // Enhanced togglePlayback function with proper pause/resume handling
   const togglePlayback = () => {
+    if (!summary) return;
+    
     if (isPlaying) {
-      // Properly pause the speech synthesis
+      // Stop the speech synthesis
       window.speechSynthesis.pause();
       setIsPlaying(false);
-    } else if (summary) {
-      // If paused, resume, otherwise start new
+    } else {
+      // If previously paused, resume, otherwise start new
       if (speechSynthRef.current && window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
-        setIsPlaying(true);
-      } else {
+      } else if (summary) {
+        // If not paused and not playing, start new speech
         generateSpeech(summary);
       }
+      setIsPlaying(true);
     }
   };
 
@@ -438,7 +441,8 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
                   </>
                 ) : (
                   <>
-                    <Play className="mr-1 h-4 w-4" /> {window.speechSynthesis.paused ? "Resume" : "Play"}
+                    <Play className="mr-1 h-4 w-4" /> 
+                    {window.speechSynthesis.paused ? "Resume" : "Play"}
                   </>
                 )}
               </Button>
