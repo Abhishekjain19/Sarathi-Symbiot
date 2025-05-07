@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -153,16 +152,17 @@ export function useIdeas() {
         }
         
         // Create a map of user_id to profile data for quick lookup
-        const profileMap = profilesData ? profilesData.reduce((map, profile) => {
+        const profileMap = profilesData ? profilesData.reduce((map: Record<string, any>, profile: any) => {
           map[profile.id] = profile;
           return map;
         }, {}) : {};
         
-        // Combine ideas with their profiles
+        // Combine ideas with their profiles and cast to proper type
         const ideasWithProfiles = ideasData.map(idea => ({
           ...idea,
+          status: idea.status as "pending" | "approved" | "rejected", // Type cast status to expected values
           profiles: profileMap[idea.user_id] || { first_name: null, last_name: null }
-        }));
+        })) as Idea[]; // Cast the entire array to Idea[]
         
         setIdeas(ideasWithProfiles);
       } else {
@@ -214,16 +214,17 @@ export function useIdeas() {
         }
         
         // Create a map of user_id to profile data for quick lookup
-        const profileMap = profilesData ? profilesData.reduce((map, profile) => {
+        const profileMap = profilesData ? profilesData.reduce((map: Record<string, any>, profile: any) => {
           map[profile.id] = profile;
           return map;
         }, {}) : {};
         
-        // Combine ideas with their profiles
+        // Combine ideas with their profiles and cast to proper type
         const pendingWithProfiles = pendingData.map(idea => ({
           ...idea,
+          status: idea.status as "pending" | "approved" | "rejected", // Type cast status to expected values
           profiles: profileMap[idea.user_id] || { first_name: null, last_name: null }
-        }));
+        })) as Idea[]; // Cast the entire array to Idea[]
         
         setPendingIdeas(pendingWithProfiles);
       } else {
