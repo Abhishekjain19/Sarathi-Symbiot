@@ -6,8 +6,10 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, MessageCircle, Volume2 } from "lucide-react";
 import { GyaanSetuChat, Message } from "@/components/GyaanSetuChat";
+import { GyaanSetuVoiceSummary } from "@/components/GyaanSetuVoiceSummary";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "@/components/ui/use-toast";
 
@@ -16,6 +18,7 @@ const OPENROUTE_API_KEY = "sk-or-v1-54759fb419f76586977ec0926783085d83d5ce687ab5
 const GyaanSetuPage = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const [activeTab, setActiveTab] = useState<string>("chat");
   const [messages, setMessages] = useState<Message[]>([
     {
       id: uuidv4(),
@@ -122,31 +125,52 @@ const GyaanSetuPage = () => {
       <main className="container mx-auto px-4 py-6">
         <h1 className="text-2xl font-bold mb-4">Gyaan Setu - AI Learning Assistant</h1>
 
-        <Card className="bg-sarathi-darkCard border-sarathi-gray/30 h-[70vh] flex flex-col">
-          <CardContent className="p-4 flex flex-col h-full">
-            <div className="flex-1 overflow-hidden">
-              <GyaanSetuChat messages={messages} isLoading={isLoading} />
-            </div>
+        <Tabs defaultValue="chat" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="chat" className="flex items-center gap-1">
+              <MessageCircle size={16} />
+              Chat Assistant
+            </TabsTrigger>
+            <TabsTrigger value="voice-summary" className="flex items-center gap-1">
+              <Volume2 size={16} />
+              Voice Summary
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="chat">
+            <Card className="bg-sarathi-darkCard border-sarathi-gray/30 h-[70vh] flex flex-col">
+              <CardContent className="p-4 flex flex-col h-full">
+                <div className="flex-1 overflow-hidden">
+                  <GyaanSetuChat messages={messages} isLoading={isLoading} />
+                </div>
 
-            <div className="mt-4 flex items-center gap-2">
-              <Input
-                type="text"
-                placeholder="Ask anything about your studies..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    sendMessage();
-                  }
-                }}
-              />
-              <Button onClick={sendMessage} disabled={isLoading}>
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send size={16} className="mr-2" />}
-                Send
-              </Button>
+                <div className="mt-4 flex items-center gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Ask anything about your studies..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        sendMessage();
+                      }
+                    }}
+                  />
+                  <Button onClick={sendMessage} disabled={isLoading}>
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send size={16} className="mr-2" />}
+                    Send
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="voice-summary">
+            <div className="h-[70vh] overflow-y-auto pr-2">
+              <GyaanSetuVoiceSummary openrouterApiKey={OPENROUTE_API_KEY} />
             </div>
-          </CardContent>
-        </Card>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
