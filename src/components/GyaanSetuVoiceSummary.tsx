@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2, Download, Play, Pause, Upload, Volume2 } from "lucide-react";
 
 interface VoiceSummaryProps {
@@ -14,7 +21,7 @@ interface VoiceSummaryProps {
 }
 
 type Voice = "male" | "female";
-type Language = "english" | "hindi";
+type Language = "english" | "hindi" | "kannada";
 
 export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterApiKey }) => {
   const [activeTab, setActiveTab] = useState<string>("topic");
@@ -30,6 +37,7 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -101,6 +109,21 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
           throw new Error("Please enter text or upload a file");
         }
       }
+
+      // Adjust system prompt based on language
+      let systemPrompt = "You are an educational assistant that provides ";
+      
+      if (language === "english") {
+        systemPrompt += "concise, informative summaries in English. ";
+      } else if (language === "hindi") {
+        systemPrompt += "concise, informative summaries in Hindi. Please write your response in Hindi using Devanagari script. ";
+      } else if (language === "kannada") {
+        systemPrompt += "concise, informative summaries in Kannada. Please write your response in Kannada script. ";
+      }
+      
+      systemPrompt += activeTab === "topic" 
+        ? "Keep summaries focused, factual, and suitable for students."
+        : "Extract key points and important information, keeping the summary focused and factual.";
       
       // Call OpenRouter API for summary
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -116,9 +139,7 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
           messages: [
             {
               role: "system",
-              content: activeTab === "topic" 
-                ? "You are an educational assistant that provides concise, informative summaries about academic topics. Keep summaries focused, factual, and suitable for students." 
-                : "You are an educational assistant that summarizes long texts into concise, informative summaries. Extract key points and important information, keeping the summary focused and factual."
+              content: systemPrompt
             },
             {
               role: "user",
@@ -136,8 +157,7 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
       const generatedSummary = data.choices[0].message.content;
       setSummary(generatedSummary);
       
-      // For this version, we'll use browser's built-in TTS
-      // In a production app, you'd connect to ElevenLabs or another TTS service
+      // Generate speech using browser's TTS
       generateSpeech(generatedSummary);
       
     } catch (error) {
@@ -153,32 +173,74 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
   };
 
   const generateSpeech = (text: string) => {
-    // Using browser's built-in TTS for this implementation
-    // In a production app, you'd call a TTS API like ElevenLabs here
+    // Cancel any ongoing speech
+    if (speechSynthRef.current) {
+      window.speechSynthesis.cancel();
+    }
     
     // Create speech synthesis utterance
     const utterance = new SpeechSynthesisUtterance(text);
+    speechSynthRef.current = utterance;
     
-    // Set voice based on language and gender preference
+    // Get available voices
     const voices = window.speechSynthesis.getVoices();
+    console.log("Available voices:", voices.map(v => ({ name: v.name, lang: v.lang })));
+    
+    // Set voice parameters based on selected language and gender
+    let voiceLangPrefix: string;
+    switch (language) {
+      case "hindi":
+        voiceLangPrefix = "hi";
+        break;
+      case "kannada":
+        voiceLangPrefix = "kn";
+        break;
+      default: // english
+        voiceLangPrefix = "en";
+        break;
+    }
+    
+    // Find an appropriate voice
     let selectedVoice = null;
     
-    if (language === "english") {
+    // First try to find an exact match for language and gender
+    selectedVoice = voices.find(v => 
+      v.lang.startsWith(voiceLangPrefix) && 
+      ((voice === "female" && /female|woman/i.test(v.name)) || 
+       (voice === "male" && /male|man/i.test(v.name)))
+    );
+    
+    // If no specific gender match, try just language match
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.lang.startsWith(voiceLangPrefix));
+    }
+    
+    // If still no match, fall back to any English voice with the right gender
+    if (!selectedVoice && language !== "english") {
       selectedVoice = voices.find(v => 
-        v.lang.startsWith('en') && 
-        ((voice === "female" && v.name.includes('Female')) || 
-         (voice === "male" && v.name.includes('Male')))
+        v.lang.startsWith("en") && 
+        ((voice === "female" && /female|woman/i.test(v.name)) || 
+         (voice === "male" && /male|man/i.test(v.name)))
       );
-    } else if (language === "hindi") {
-      selectedVoice = voices.find(v => 
-        v.lang.startsWith('hi') && 
-        ((voice === "female" && v.name.includes('Female')) || 
-         (voice === "male" && v.name.includes('Male')))
-      );
+    }
+    
+    // Last resort - any English voice
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.lang.startsWith("en"));
     }
     
     if (selectedVoice) {
       utterance.voice = selectedVoice;
+      console.log("Selected voice:", selectedVoice.name, selectedVoice.lang);
+    } else {
+      console.warn("No suitable voice found, using default voice");
+    }
+    
+    // Set gender-specific pitch (slightly higher for female, lower for male)
+    if (voice === "female") {
+      utterance.pitch = 1.1;
+    } else {
+      utterance.pitch = 0.9;
     }
     
     // Create a blob for download capability
@@ -187,13 +249,24 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
     );
     setAudioUrl(blobURL);
     
-    // Play the speech
-    window.speechSynthesis.speak(utterance);
-    setIsPlaying(true);
-    
+    // Event handlers
     utterance.onend = () => {
       setIsPlaying(false);
     };
+    
+    utterance.onerror = (event) => {
+      console.error("Speech synthesis error:", event);
+      setIsPlaying(false);
+      toast({
+        title: "Speech Error",
+        description: "There was an error playing the audio",
+        variant: "destructive",
+      });
+    };
+    
+    // Start speaking
+    window.speechSynthesis.speak(utterance);
+    setIsPlaying(true);
   };
 
   const togglePlayback = () => {
@@ -306,26 +379,16 @@ export const GyaanSetuVoiceSummary: React.FC<VoiceSummaryProps> = ({ openrouterA
           
           <div>
             <Label htmlFor="language">Language</Label>
-            <div className="flex mt-1">
-              <Button
-                type="button"
-                variant={language === "english" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setLanguage("english")}
-                className="rounded-r-none"
-              >
-                English
-              </Button>
-              <Button
-                type="button"
-                variant={language === "hindi" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setLanguage("hindi")}
-                className="rounded-l-none"
-              >
-                Hindi
-              </Button>
-            </div>
+            <Select value={language} onValueChange={(val: Language) => setLanguage(val)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Language" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="english">English</SelectItem>
+                <SelectItem value="hindi">Hindi</SelectItem>
+                <SelectItem value="kannada">Kannada</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavBar } from "@/components/NavBar";
@@ -117,6 +116,20 @@ const GyaanSetuPage = () => {
       navigate("/auth");
     }
   }, [profile, navigate]);
+
+  useEffect(() => {
+    // Load speech synthesis voices when the component mounts
+    // This is necessary for some browsers, especially Chrome
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      // Force loading of voices
+      speechSynthesis.getVoices();
+      
+      // Set up event listener for when voices are loaded
+      speechSynthesis.onvoiceschanged = () => {
+        console.log("Voices loaded:", speechSynthesis.getVoices().length);
+      };
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-sarathi-dark text-white">
