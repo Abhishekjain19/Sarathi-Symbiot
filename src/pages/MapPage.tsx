@@ -81,31 +81,23 @@ const MapPage = () => {
 
     setIsNavigating(true);
     try {
-      // Call OpenRouteService API to get directions
-      const response = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${OPENROUTE_API_KEY}&start=${userLocation.longitude},${userLocation.latitude}&end=${location.longitude},${location.latitude}`);
-      
-      if (!response.ok) {
-        throw new Error(`Navigation API error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      // Extract navigation URL for Google Maps
-      const coords = data.features[0].geometry.coordinates;
+      // Skip the API call and go directly to Google Maps
+      // This is more reliable as Google Maps has better routing capabilities
       const destination = `${location.latitude},${location.longitude}`;
+      const origin = `${userLocation.latitude},${userLocation.longitude}`;
       
-      // Open Google Maps for actual navigation (as a fallback/actual navigation)
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, '_blank');
+      // Open Google Maps with directions
+      window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`, '_blank');
       
       toast({
         title: "Navigation Started",
-        description: `Directing you to ${location.name}`,
+        description: `Directing you to ${location.name} using Google Maps`,
       });
     } catch (error) {
       console.error("Navigation error:", error);
       toast({
         title: "Navigation Error",
-        description: "Unable to calculate route. Please try again.",
+        description: "Unable to start navigation. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -130,6 +122,14 @@ const MapPage = () => {
       students: 380,
       latitude: 12.905093,
       longitude: 77.599910
+    },
+    {
+      id: "3",
+      name: "Delhi Public School",
+      address: "Electronic City, Bangalore", 
+      students: 520,
+      latitude: 12.841280,
+      longitude: 77.676323
     }
   ];
 
