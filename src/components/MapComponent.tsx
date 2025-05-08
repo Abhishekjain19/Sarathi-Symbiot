@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from "react";
-import { Navigation, X } from "lucide-react";
+import { Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 
@@ -73,14 +73,6 @@ const MapComponent = ({ selectedLocation, userLocation, onViewInfo }: MapCompone
     });
   };
 
-  const handleExitNavigation = () => {
-    setIsNavigating(false);
-    toast({
-      title: "Navigation Stopped",
-      description: "Exiting navigation mode",
-    });
-  };
-
   return (
     <div className="relative">
       <iframe 
@@ -109,40 +101,20 @@ const MapComponent = ({ selectedLocation, userLocation, onViewInfo }: MapCompone
                 View Info
               </Button>
             )}
-            {isNavigating ? (
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                className="w-1/2"
-                onClick={handleExitNavigation}
-              >
-                <X size={14} className="mr-1" /> Exit Navigation
-              </Button>
-            ) : (
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                className="w-1/2"
-                onClick={handleNavigate}
-                disabled={!userLocation}
-              >
-                <Navigation size={14} className="mr-1" /> Navigate
-              </Button>
-            )}
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="w-1/2"
+              onClick={handleNavigate}
+              disabled={!userLocation || isNavigating}
+            >
+              {isNavigating ? 
+                "Navigating..." : 
+                <><Navigation size={14} className="mr-1" /> Navigate</>
+              }
+            </Button>
           </div>
         </div>
-      )}
-
-      {/* Exit Navigation Button (shows only when navigating) */}
-      {isNavigating && !selectedLocation && (
-        <Button
-          variant="destructive"
-          size="sm"
-          className="absolute top-4 right-4"
-          onClick={handleExitNavigation}
-        >
-          <X size={14} className="mr-1" /> Exit Navigation
-        </Button>
       )}
     </div>
   );
