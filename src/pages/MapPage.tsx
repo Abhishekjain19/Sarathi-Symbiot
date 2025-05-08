@@ -1,10 +1,11 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Info, MapPin, User, Search } from "lucide-react";
+import { ArrowLeft, Info, MapPin, User, Search, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "@/components/ui/use-toast";
 
 type Location = {
   id: string;
@@ -15,15 +16,46 @@ type Location = {
   longitude: number;
 }
 
+const OPENROUTE_API_KEY = "5b3ce3597851110001cf6248a6be720229f7485caea62c80084d8f4f";
+
 const MapPage = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     if (!profile) {
       navigate("/auth");
+      return;
+    }
+
+    // Get user's current location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast({
+            title: "Location Error",
+            description: "Unable to get your current location. Navigation features may be limited.",
+            variant: "destructive"
+          });
+        }
+      );
+    } else {
+      toast({
+        title: "Location Not Supported",
+        description: "Your browser doesn't support geolocation.",
+        variant: "destructive"
+      });
     }
   }, [profile, navigate]);
 
@@ -35,6 +67,75 @@ const MapPage = () => {
     e.preventDefault();
     // Implement search logic here
     console.log("Searching for:", searchQuery);
+  };
+
+  const navigateToLocation = useCallback(async (location: Location) => {
+    if (!userLocation) {
+      toast({
+        title: "Location Required",
+        description: "We need your current location to provide navigation.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsNavigating(true);
+    try {
+      // Call OpenRouteService API to get directions
+      const response = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${OPENROUTE_API_KEY}&start=${userLocation.longitude},${userLocation.latitude}&end=${location.longitude},${location.latitude}`);
+      
+      if (!response.ok) {
+        throw new Error(`Navigation API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Extract navigation URL for Google Maps
+      const coords = data.features[0].geometry.coordinates;
+      const destination = `${location.latitude},${location.longitude}`;
+      
+      // Open Google Maps for actual navigation (as a fallback/actual navigation)
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}`, '_blank');
+      
+      toast({
+        title: "Navigation Started",
+        description: `Directing you to ${location.name}`,
+      });
+    } catch (error) {
+      console.error("Navigation error:", error);
+      toast({
+        title: "Navigation Error",
+        description: "Unable to calculate route. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsNavigating(false);
+    }
+  }, [userLocation]);
+
+  // Example learning centers data
+  const learningCenters: Location[] = [
+    {
+      id: "1",
+      name: "National Public School",
+      address: "Koramangala, Bangalore",
+      students: 450,
+      latitude: 12.952849,
+      longitude: 77.630275
+    },
+    {
+      id: "2",
+      name: "The Brigade School",
+      address: "JP Nagar, Bangalore",
+      students: 380,
+      latitude: 12.905093,
+      longitude: 77.599910
+    }
+  ];
+
+  const handleViewOnMap = (location: Location) => {
+    setSelectedLocation(location);
+    // You could also pan/zoom the map to this location
   };
 
   return (
@@ -82,7 +183,7 @@ const MapPage = () => {
             className="rounded-md"
           />
           
-          {/* Location Info (Example) */}
+          {/* Location Info */}
           {selectedLocation && (
             <div className="absolute top-4 left-4 bg-sarathi-darkCard border-sarathi-gray/30 rounded-md p-4 w-64">
               <h3 className="font-medium text-lg">{selectedLocation.name}</h3>
@@ -91,9 +192,23 @@ const MapPage = () => {
                 <User size={14} className="text-muted-foreground" />
                 <span className="text-sm">{selectedLocation.students} Students</span>
               </div>
-              <Button variant="secondary" size="sm" className="mt-3 w-full">
-                <Info size={14} className="mr-2" /> More Info
-              </Button>
+              <div className="flex gap-2 mt-3">
+                <Button variant="secondary" size="sm" className="w-1/2">
+                  <Info size={14} className="mr-1" /> Info
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  className="w-1/2"
+                  onClick={() => navigateToLocation(selectedLocation)}
+                  disabled={isNavigating || !userLocation}
+                >
+                  {isNavigating ? 
+                    "Loading..." : 
+                    <><Navigation size={14} className="mr-1" /> Navigate</>
+                  }
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -101,26 +216,32 @@ const MapPage = () => {
         {/* List of Learning Centers */}
         <div className="mt-8">
           <h2 className="text-lg font-medium mb-4">Nearby Learning Centers</h2>
-          {/* Replace with actual data */}
           <div className="grid gap-4">
-            <div className="sarathi-card flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">National Public School</h3>
-                <p className="text-sm text-muted-foreground">Koramangala, Bangalore</p>
+            {learningCenters.map(center => (
+              <div key={center.id} className="sarathi-card flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">{center.name}</h3>
+                  <p className="text-sm text-muted-foreground">{center.address}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleViewOnMap(center)}
+                  >
+                    <MapPin size={14} className="mr-2" /> View on Map
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigateToLocation(center)}
+                    disabled={isNavigating || !userLocation}
+                  >
+                    <Navigation size={14} className="mr-2" /> Navigate
+                  </Button>
+                </div>
               </div>
-              <Button variant="outline" size="sm">
-                <MapPin size={14} className="mr-2" /> View on Map
-              </Button>
-            </div>
-            <div className="sarathi-card flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">The Brigade School</h3>
-                <p className="text-sm text-muted-foreground">JP Nagar, Bangalore</p>
-              </div>
-              <Button variant="outline" size="sm">
-                <MapPin size={14} className="mr-2" /> View on Map
-              </Button>
-            </div>
+            ))}
           </div>
         </div>
       </main>
