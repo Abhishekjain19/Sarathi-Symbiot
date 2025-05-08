@@ -1,11 +1,12 @@
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Info, MapPin, User, Search, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavBar } from "@/components/NavBar";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/components/ui/use-toast";
+import MapComponent from "@/components/MapComponent";
 
 type Location = {
   id: string;
@@ -69,42 +70,6 @@ const MapPage = () => {
     console.log("Searching for:", searchQuery);
   };
 
-  const navigateToLocation = useCallback(async (location: Location) => {
-    if (!userLocation) {
-      toast({
-        title: "Location Required",
-        description: "We need your current location to provide navigation.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsNavigating(true);
-    try {
-      // Skip the API call and go directly to Google Maps
-      // This is more reliable as Google Maps has better routing capabilities
-      const destination = `${location.latitude},${location.longitude}`;
-      const origin = `${userLocation.latitude},${userLocation.longitude}`;
-      
-      // Open Google Maps with directions
-      window.open(`https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`, '_blank');
-      
-      toast({
-        title: "Navigation Started",
-        description: `Directing you to ${location.name} using Google Maps`,
-      });
-    } catch (error) {
-      console.error("Navigation error:", error);
-      toast({
-        title: "Navigation Error",
-        description: "Unable to start navigation. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsNavigating(false);
-    }
-  }, [userLocation]);
-
   // Example learning centers data
   const learningCenters: Location[] = [
     {
@@ -135,7 +100,13 @@ const MapPage = () => {
 
   const handleViewOnMap = (location: Location) => {
     setSelectedLocation(location);
+    setIsNavigating(false); // Reset navigation state when viewing a new location
     // You could also pan/zoom the map to this location
+  };
+
+  const handleViewInfo = (location: Location) => {
+    // Implement detailed info view logic here
+    console.log("Viewing info for:", location.name);
   };
 
   return (
@@ -169,49 +140,12 @@ const MapPage = () => {
           </div>
         </form>
 
-        {/* Map */}
-        <div className="relative">
-          <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.3741832842937!2d77.6302746745262!3d12.952848715877746!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae159448caefd1%3A0x9429499b69999f9a!2sNational%20Public%20School%2C%20Koramangala!5e0!3m2!1sen!2sin!4v1714460109249!5m2!1sen!2sin" 
-            width="100%" 
-            height="450" 
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy" 
-            referrerPolicy="no-referrer-when-downgrade"
-            title="Google Maps - Learning Centers"
-            className="rounded-md"
-          />
-          
-          {/* Location Info */}
-          {selectedLocation && (
-            <div className="absolute top-4 left-4 bg-sarathi-darkCard border-sarathi-gray/30 rounded-md p-4 w-64">
-              <h3 className="font-medium text-lg">{selectedLocation.name}</h3>
-              <p className="text-sm text-muted-foreground">{selectedLocation.address}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <User size={14} className="text-muted-foreground" />
-                <span className="text-sm">{selectedLocation.students} Students</span>
-              </div>
-              <div className="flex gap-2 mt-3">
-                <Button variant="secondary" size="sm" className="w-1/2">
-                  <Info size={14} className="mr-1" /> Info
-                </Button>
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  className="w-1/2"
-                  onClick={() => navigateToLocation(selectedLocation)}
-                  disabled={isNavigating || !userLocation}
-                >
-                  {isNavigating ? 
-                    "Loading..." : 
-                    <><Navigation size={14} className="mr-1" /> Navigate</>
-                  }
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Map Component */}
+        <MapComponent 
+          selectedLocation={selectedLocation}
+          userLocation={userLocation}
+          onViewInfo={handleViewInfo}
+        />
 
         {/* List of Learning Centers */}
         <div className="mt-8">
@@ -234,7 +168,10 @@ const MapPage = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigateToLocation(center)}
+                    onClick={() => {
+                      handleViewOnMap(center);
+                      setIsNavigating(true);
+                    }}
                     disabled={isNavigating || !userLocation}
                   >
                     <Navigation size={14} className="mr-2" /> Navigate
