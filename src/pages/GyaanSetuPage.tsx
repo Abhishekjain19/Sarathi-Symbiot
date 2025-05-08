@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavBar } from "@/components/NavBar";
@@ -13,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "@/components/ui/use-toast";
 
-const OPENROUTE_API_KEY = "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";
+const OPENROUTE_API_KEY = "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";
 
 const GyaanSetuPage = () => {
   const navigate = useNavigate();
