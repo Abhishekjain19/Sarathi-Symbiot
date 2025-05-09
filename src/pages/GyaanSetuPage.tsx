@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, Loader2, MessageCircle, Volume2, Book } from "lucide-react";
+import { Send, Loader2, MessageCircle, Volume2, Book, Trophy } from "lucide-react";
 import { GyaanSetuChat, Message } from "@/components/GyaanSetuChat";
 import { GyaanSetuVoiceSummary } from "@/components/GyaanSetuVoiceSummary";
 import { GyaanSetuStoryLearn } from "@/components/GyaanSetuStoryLearn";
@@ -255,6 +255,23 @@ const GyaanSetuPage = () => {
 
       <main className="container mx-auto px-4 py-6">
         <h1 className="text-2xl font-bold mb-4">Gyaan Setu - AI Learning Assistant</h1>
+
+        {/* Featured Banner */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-lg mb-6 shadow-lg animate-fade-in">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="mb-4 md:mb-0 md:mr-4">
+              <h2 className="text-xl font-bold">Try Gyan Battles!</h2>
+              <p className="text-white/90">Challenge yourself with fun AI-powered educational quizzes</p>
+            </div>
+            <Button 
+              onClick={() => navigate('/gyan-battles')} 
+              className="bg-white text-blue-700 hover:bg-blue-50 flex items-center gap-2"
+            >
+              <Trophy size={18} />
+              Play Now
+            </Button>
+          </div>
+        </div>
 
         <Tabs defaultValue="chat" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-4">

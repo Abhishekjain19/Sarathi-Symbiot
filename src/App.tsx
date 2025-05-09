@@ -22,6 +22,7 @@ import AllLectures from "./pages/AllLectures";
 import SrijanIdeaHub from "./pages/SrijanIdeaHub";
 import SrijanAdmin from "./pages/SrijanAdmin";
 import GyaanSetuPage from "./pages/GyaanSetuPage";
+import GyanBattlesPage from "./pages/GyanBattlesPage";
 import Auth from "./pages/Auth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -141,6 +142,14 @@ const App = () => {
                 element={
                   <ProtectedRoute allowedRoles={["student", "professor", "ngo"]}>
                     <GyaanSetuPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/gyan-battles" 
+                element={
+                  <ProtectedRoute allowedRoles={["student", "professor", "ngo"]}>
+                    <GyanBattlesPage />
                   </ProtectedRoute>
                 } 
               />
