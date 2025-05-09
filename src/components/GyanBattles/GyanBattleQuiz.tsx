@@ -11,7 +11,8 @@ import {
   Volume2,
   Volume1,
   VolumeX,
-  SkipForward
+  SkipForward,
+  Loader // Import Loader from lucide-react instead of using Loader2
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -388,7 +389,7 @@ export const GyanBattleQuiz = ({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-        <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+        <Loader className="w-12 h-12 animate-spin text-primary mb-4" /> {/* Use Loader instead of Loader2 */}
         <h3 className="text-xl font-semibold">Preparing Your Battle...</h3>
         <p className="text-sarathi-gray mt-2">Generating challenging questions about {topic}</p>
       </div>
