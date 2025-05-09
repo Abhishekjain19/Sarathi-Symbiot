@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavBar } from "@/components/NavBar";
@@ -5,9 +6,10 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, Loader2, MessageCircle, Volume2 } from "lucide-react";
+import { Send, Loader2, MessageCircle, Volume2, Book } from "lucide-react";
 import { GyaanSetuChat, Message } from "@/components/GyaanSetuChat";
 import { GyaanSetuVoiceSummary } from "@/components/GyaanSetuVoiceSummary";
+import { GyaanSetuStoryLearn } from "@/components/GyaanSetuStoryLearn";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "@/components/ui/use-toast";
@@ -264,6 +266,10 @@ const GyaanSetuPage = () => {
               <Volume2 size={16} />
               Voice Summary
             </TabsTrigger>
+            <TabsTrigger value="story-learn" className="flex items-center gap-1">
+              <Book size={16} />
+              StoryLearn
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="chat">
@@ -297,6 +303,12 @@ const GyaanSetuPage = () => {
           <TabsContent value="voice-summary">
             <div className="h-[70vh] overflow-y-auto pr-2">
               <GyaanSetuVoiceSummary openrouterApiKey={OPENROUTE_API_KEY} />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="story-learn">
+            <div className="h-[70vh] overflow-y-auto pr-2">
+              <GyaanSetuStoryLearn openrouterApiKey={OPENROUTE_API_KEY} />
             </div>
           </TabsContent>
         </Tabs>
