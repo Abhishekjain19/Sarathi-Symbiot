@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
@@ -10,17 +9,17 @@ import { useToast } from "@/components/ui/use-toast";
 // Fallback mock data if database fetch fails
 const mockLectures = {
   physics: [
-    { id: 1, title: "Introduction to Mechanics", professor: "Dr. Sharma", duration: "45 minutes", progress: 30 },
-    { id: 2, title: "Laws of Motion", professor: "Dr. Sharma", duration: "50 minutes", progress: 0 },
-    { id: 3, title: "Work and Energy", professor: "Dr. Sharma", duration: "40 minutes", progress: 75 },
+    { id: "1", title: "Multiplication of Numbers", professor: "Dr. Sharma", duration: "45 minutes", progress: 30, subject: "physics", grade: "10th", file_url: "", thumbnail_url: "" },
+    { id: "2", title: "Laws of Motion", professor: "Dr. Sharma", duration: "50 minutes", progress: 0, subject: "physics", grade: "10th", file_url: "", thumbnail_url: "" },
+    { id: "3", title: "Work and Energy", professor: "Dr. Sharma", duration: "40 minutes", progress: 75, subject: "physics", grade: "10th", file_url: "", thumbnail_url: "" },
   ],
   mathematics: [
-    { id: 1, title: "Basic Calculus", professor: "Dr. Patel", duration: "55 minutes", progress: 100 },
-    { id: 2, title: "Differentiation", professor: "Dr. Patel", duration: "45 minutes", progress: 60 },
+    { id: "1", title: "Basic Calculus", professor: "Dr. Patel", duration: "55 minutes", progress: 100, subject: "mathematics", grade: "10th", file_url: "", thumbnail_url: "" },
+    { id: "2", title: "Differentiation", professor: "Dr. Patel", duration: "45 minutes", progress: 60, subject: "mathematics", grade: "10th", file_url: "", thumbnail_url: "" },
   ],
   chemistry: [
-    { id: 1, title: "Atomic Structure", professor: "Prof. Verma", duration: "40 minutes", progress: 0 },
-    { id: 2, title: "Chemical Bonding", professor: "Prof. Verma", duration: "50 minutes", progress: 25 },
+    { id: "1", title: "Atomic Structure", professor: "Prof. Verma", duration: "40 minutes", progress: 0, subject: "chemistry", grade: "10th", file_url: "", thumbnail_url: "" },
+    { id: "2", title: "Chemical Bonding", professor: "Prof. Verma", duration: "50 minutes", progress: 25, subject: "chemistry", grade: "10th", file_url: "", thumbnail_url: "" },
   ],
 };
 

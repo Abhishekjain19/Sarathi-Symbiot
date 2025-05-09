@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, User, BookOpen, Map, BarChart, LogOut, Star, MessageCircle } from "lucide-react";
@@ -74,6 +73,7 @@ export const NavBar = () => {
               )}
               <NavLink to="/maps" icon={Map} label="Find Centers" />
               <NavLink to="/assessment/1" icon={BarChart} label="Assessments" />
+              <NavLink to="/gyan-battles" icon={BarChart} label="Gyan Battles" />
               <NavLink to="/srijan" icon={Star} label="Srijan" />
               <NavLink to="/gyaansetu" icon={MessageCircle} label="Gyaan Setu" />
               {profile?.role === "ngo" && (

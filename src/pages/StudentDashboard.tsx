@@ -12,13 +12,14 @@ import { BatchSelector } from "@/components/BatchSelector";
 const recentLectures = [
   {
     id: 1,
-    title: "Introduction to Physics",
+    title: "Multiplication of Numbers",
     professor: "Dr. Sharma",
     duration: "45 min",
     progress: 30,
     thumbnail: "https://placehold.co/400x225/1a237e/ffffff?text=Physics",
     isDownloaded: false,
     grade: "4th",
+    file_url: "https://www.youtube.com/watch?v=_AnNhkL1zlg",
   },
   {
     id: 2,
@@ -69,6 +70,7 @@ const StudentDashboard = () => {
   const { profile } = useAuth();
   const [selectedGrade, setSelectedGrade] = useState<string>("4th");
   const [showMap, setShowMap] = useState<boolean>(false);
+  const [playingLectureId, setPlayingLectureId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!profile || profile.role !== "student") {
@@ -106,53 +108,73 @@ const StudentDashboard = () => {
           
           <div className="grid gap-4">
             {filteredLectures.map((lecture) => (
-              <div key={lecture.id} className="sarathi-card">
-                <div className="flex gap-4">
-                  <div className="relative h-20 w-32 overflow-hidden rounded-lg">
-                    <img 
-                      src={lecture.thumbnail} 
-                      alt={lecture.title} 
-                      className="h-full w-full object-cover"
+              playingLectureId === lecture.id && lecture.file_url ? (
+                <div key={lecture.id} className="sarathi-card">
+                  <div className="aspect-video w-full rounded-lg overflow-hidden mb-2">
+                    <iframe
+                      width="100%"
+                      height="315"
+                      src={lecture.file_url.replace("watch?v=", "embed/")}
+                      title={lecture.title}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-64 md:h-96"
                     />
-                    {lecture.progress > 0 && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1 text-[10px]">
-                        {lecture.progress}% completed
-                      </div>
-                    )}
                   </div>
-                  
-                  <div className="flex-1 flex flex-col">
-                    <h3 className="font-medium line-clamp-1">{lecture.title}</h3>
-                    <p className="text-sm text-muted-foreground">{lecture.professor}</p>
-                    <p className="text-xs flex items-center mt-1 text-muted-foreground">
-                      <Clock size={12} className="mr-1" />
-                      {lecture.duration}
-                    </p>
+                  <div className="flex justify-end">
+                    <Button size="sm" variant="outline" onClick={() => setPlayingLectureId(null)}>
+                      Close Video
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div key={lecture.id} className="sarathi-card">
+                  <div className="flex gap-4">
+                    <div className="relative h-20 w-32 overflow-hidden rounded-lg">
+                      <img 
+                        src={lecture.thumbnail} 
+                        alt={lecture.title} 
+                        className="h-full w-full object-cover"
+                      />
+                      {lecture.progress > 0 && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1 text-[10px]">
+                          {lecture.progress}% completed
+                        </div>
+                      )}
+                    </div>
                     
-                    <div className="mt-2">
-                      <Progress value={lecture.progress} className="h-1" />
+                    <div className="flex-1 flex flex-col">
+                      <h3 className="font-medium line-clamp-1">{lecture.title}</h3>
+                      <p className="text-sm text-muted-foreground">{lecture.professor}</p>
+                      <p className="text-xs flex items-center mt-1 text-muted-foreground">
+                        <Clock size={12} className="mr-1" />
+                        {lecture.duration}
+                      </p>
+                      
+                      <div className="mt-2">
+                        <Progress value={lecture.progress} className="h-1" />
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="flex justify-end gap-2 mt-3">
-                  {!lecture.isDownloaded ? (
-                    <Button variant="outline" size="sm" className="text-xs">
-                      <Download size={14} className="mr-1" /> Download
-                    </Button>
-                  ) : (
-                    <span className="text-xs bg-green-600/20 text-green-500 px-2 py-1 rounded flex items-center">
-                      Available Offline
-                    </span>
-                  )}
                   
-                  <Link to={`/lecture/${lecture.id}`}>
-                    <Button size="sm" className="text-xs bg-primary">
+                  <div className="flex justify-end gap-2 mt-3">
+                    {!lecture.isDownloaded ? (
+                      <Button variant="outline" size="sm" className="text-xs">
+                        <Download size={14} className="mr-1" /> Download
+                      </Button>
+                    ) : (
+                      <span className="text-xs bg-green-600/20 text-green-500 px-2 py-1 rounded flex items-center">
+                        Available Offline
+                      </span>
+                    )}
+                    
+                    <Button size="sm" className="text-xs bg-primary" onClick={() => navigate(`/lecture/${lecture.id}`)}>
                       <Play size={14} className="mr-1" /> Continue
                     </Button>
-                  </Link>
+                  </div>
                 </div>
-              </div>
+              )
             ))}
           </div>
         </section>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavBar } from "@/components/NavBar";
@@ -52,6 +51,8 @@ const GyaanSetuPage = () => {
   const [difficulty, setDifficulty] = useState<string>("intermediate");
   const [model, setModel] = useState<string>(difficultyModelMapping.intermediate);
   const [promptModifier, setPromptModifier] = useState<string>(difficultyPromptModifiers.intermediate);
+  const [messages, setMessages] = useState([]);
+  const [chatLoading, setChatLoading] = useState(false);
   
   const { isLoading, profile } = useAuth();
   const navigate = useNavigate();
@@ -160,6 +161,64 @@ const GyaanSetuPage = () => {
     };
   };
 
+  const handleAddMessage = (msg) => setMessages(prev => [...prev, msg]);
+
+  const handleSendMessage = async (text) => {
+    const userMsg = {
+      id: Date.now().toString() + Math.random(),
+      role: "user",
+      content: text,
+      timestamp: Date.now(),
+    };
+    setMessages(prev => [...prev, userMsg]);
+    setChatLoading(true);
+    try {
+      // Prepare conversation for OpenRouter
+      const chatHistory = [...messages, userMsg].map(m => ({
+        role: m.role === "user" ? "user" : "assistant",
+        content: m.content
+      }));
+      const response = await fetch(API_HOST + "/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API_KEY}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: promptModifier },
+            ...chatHistory
+          ],
+          max_tokens: 500
+        })
+      });
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
+      setMessages(prev => ([
+        ...prev,
+        {
+          id: Date.now().toString() + Math.random(),
+          role: "assistant",
+          content,
+          timestamp: Date.now(),
+        }
+      ]));
+    } catch (err) {
+      setMessages(prev => ([
+        ...prev,
+        {
+          id: Date.now().toString() + Math.random(),
+          role: "assistant",
+          content: "Sorry, there was an error connecting to the AI service.",
+          timestamp: Date.now(),
+        }
+      ]));
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   // Only show loader when authentication is being checked
   if (isLoading) {
     return (
@@ -195,43 +254,15 @@ const GyaanSetuPage = () => {
           </TabsList>
           
           <TabsContent value="chat">
-            <GyaanSetuChat 
-              apiKey={API_KEY} 
-              apiHost={API_HOST} 
-              model={model}
-              promptModifier={promptModifier}
-              difficulty={difficulty}
-              handleAPIError={handleAPIError}
-            />
+            <GyaanSetuChat messages={messages} isLoading={chatLoading} onAddMessage={handleAddMessage} onSendMessage={handleSendMessage} />
           </TabsContent>
           
           <TabsContent value="story">
-            <GyaanSetuStoryLearn 
-              apiKey={API_KEY} 
-              apiHost={API_HOST} 
-              model={model}
-              promptModifier={promptModifier}
-              difficulty={difficulty}
-              handleAPIError={handleAPIError}
-            />
+            <GyaanSetuStoryLearn openrouterApiKey={API_KEY} />
           </TabsContent>
           
           <TabsContent value="voice">
-            <GyaanSetuVoiceSummary 
-              apiKey={API_KEY} 
-              apiHost={API_HOST}
-              voices={voices}
-              isSpeaking={isSpeaking}
-              setIsSpeaking={setIsSpeaking}
-              isPaused={isPaused}
-              setIsPaused={setIsPaused}
-              currentUtterance={currentUtterance}
-              setCurrentUtterance={setCurrentUtterance}
-              model={model}
-              promptModifier={promptModifier}
-              difficulty={difficulty}
-              handleAPIError={handleAPIError}
-            />
+            <GyaanSetuVoiceSummary openrouterApiKey={API_KEY} />
           </TabsContent>
         </Tabs>
       </main>

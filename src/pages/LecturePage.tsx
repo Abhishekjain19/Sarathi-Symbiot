@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Users, MessageSquare, Download, Share2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,15 +15,15 @@ import { useToast } from "@/components/ui/use-toast";
 // Default lecture data as fallback
 const defaultLecture = {
   id: "default",
-  title: "Introduction to React",
-  uploaded_at: "12 May, 2024",
-  views: 1200,
-  subject: "Computer Science",
-  grade: "8th",
-  description: "In this lecture, we will cover the basics of React, including components, props, and state.",
-  file_url: "https://www.youtube.com/embed/dQw4w9WgXcQ", // Fallback URL
-  professor: "Dr. Johnson",
-  duration: 45,
+  title: "Multiplication of numbers",
+  uploaded_at: "9 May, 2025",
+  views: 167,
+  subject: "Mathematics",
+  grade: "4th",
+  description: "In this lecture, we will cover the basics of multiplication of numbers, and how to solve the problems related to it.",
+  file_url: "https://www.youtube.com/watch?v=_AnNhkL1zlg", // Fallback URL
+  professor: "Dr. Ravi",
+  duration: 33,
 };
 
 const LecturePage = () => {
@@ -51,7 +50,7 @@ const LecturePage = () => {
   const { profile } = useAuth();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
-  const videoRef = useState<HTMLVideoElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     if (!profile) {
@@ -110,9 +109,9 @@ const LecturePage = () => {
     // Simulate loading progress for video
     const interval = setInterval(() => {
       setProgress((prevProgress) => {
-        if (prevProgress >= 100) {
+        if (prevProgress >= 12) {
           clearInterval(interval);
-          return 100;
+          return 12;
         }
         return prevProgress + 1;
       });
@@ -156,6 +155,22 @@ const LecturePage = () => {
 
   const isYouTubeLink = lecture.file_url?.includes('youtube.com') || lecture.file_url?.includes('youtu.be');
 
+  const getYouTubeEmbedUrl = (url: string) => {
+    if (!url) return "";
+    // Convert watch?v= or youtu.be/ to embed/
+    if (url.includes("youtube.com/watch?v=")) {
+      return url.replace("watch?v=", "embed/");
+    }
+    if (url.includes("youtu.be/")) {
+      const id = url.split("youtu.be/")[1].split("?")[0];
+      return `https://www.youtube.com/embed/${id}`;
+    }
+    if (url.includes("youtube.com/embed/")) {
+      return url;
+    }
+    return url;
+  };
+
   return (
     <div className="min-h-screen bg-sarathi-dark text-white">
       <NavBar />
@@ -164,15 +179,16 @@ const LecturePage = () => {
         <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden mb-4 bg-black">
           {isYouTubeLink ? (
             <iframe
-              src={lecture.file_url}
+              src={getYouTubeEmbedUrl(lecture.file_url)}
               title={lecture.title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="w-full h-full"
+              style={{ minHeight: 320 }}
             ></iframe>
           ) : (
             <video
-              ref={(el) => videoRef[1] = el}
+              ref={videoRef}
               src={lecture.file_url || ""}
               controls
               className="w-full h-full"
@@ -201,7 +217,7 @@ const LecturePage = () => {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" onClick={() => {
-              const videoElement = videoRef[1];
+              const videoElement = videoRef.current;
               if (videoElement) {
                 if (videoElement.paused) {
                   videoElement.play();

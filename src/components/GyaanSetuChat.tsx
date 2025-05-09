@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Loader } from "lucide-react";
 import { 
@@ -37,14 +36,21 @@ export interface Message {
 interface GyaanSetuChatProps {
   messages: Message[];
   isLoading: boolean;
+  onAddMessage?: (msg: Message) => void;
+  onSendMessage?: (text: string) => void;
 }
 
 export const GyaanSetuChat: React.FC<GyaanSetuChatProps> = ({ 
   messages, 
-  isLoading 
+  isLoading,
+  onAddMessage,
+  onSendMessage
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+  const [searchWord, setSearchWord] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [input, setInput] = useState("");
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -56,6 +62,43 @@ export const GyaanSetuChat: React.FC<GyaanSetuChatProps> = ({
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleDictionarySearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchWord.trim() || !onAddMessage) return;
+    setSearchLoading(true);
+    try {
+      const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(searchWord)}`);
+      const data = await res.json();
+      let definition = "No definition found.";
+      if (Array.isArray(data) && data[0]?.meanings?.[0]?.definitions?.[0]?.definition) {
+        definition = data[0].meanings[0].definitions[0].definition;
+      }
+      onAddMessage({
+        id: Date.now().toString() + Math.random(),
+        role: "assistant",
+        content: `**${searchWord}**: ${definition}`,
+        timestamp: Date.now(),
+      });
+    } catch (err) {
+      onAddMessage({
+        id: Date.now().toString() + Math.random(),
+        role: "assistant",
+        content: `Could not fetch definition for "${searchWord}".`,
+        timestamp: Date.now(),
+      });
+    } finally {
+      setSearchLoading(false);
+      setSearchWord("");
+    }
+  };
+
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || !onSendMessage || isLoading) return;
+    onSendMessage(input.trim());
+    setInput("");
   };
 
   // Render quiz component
@@ -103,52 +146,88 @@ export const GyaanSetuChat: React.FC<GyaanSetuChatProps> = ({
   };
 
   return (
-    <ScrollArea className="h-full w-full">
-      <div className="flex-1 py-4 space-y-6 pr-4">
-        {messages.map((message) => (
-          <div 
-            key={message.id} 
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+    <div className="flex flex-col h-full w-full">
+      <form onSubmit={handleDictionarySearch} className="flex gap-2 mb-2">
+        <input
+          type="text"
+          className="flex-1 rounded px-3 py-2 bg-sarathi-darkCard border border-sarathi-gray/30 text-white"
+          placeholder="Search dictionary..."
+          value={searchWord}
+          onChange={e => setSearchWord(e.target.value)}
+          disabled={searchLoading}
+        />
+        <button
+          type="submit"
+          className="px-4 py-2 rounded bg-primary text-white disabled:opacity-50"
+          disabled={searchLoading || !searchWord.trim()}
+        >
+          {searchLoading ? "Searching..." : "Search"}
+        </button>
+      </form>
+      <ScrollArea className="h-full w-full flex-1">
+        <div className="flex-1 py-4 space-y-6 pr-4">
+          {messages.map((message) => (
             <div 
-              className={`max-w-[85%] ${
-                message.role === 'user' 
-                  ? 'bg-primary/20 rounded-t-2xl rounded-l-2xl' 
-                  : 'bg-sarathi-darkCard rounded-t-2xl rounded-r-2xl'
-              } p-4`}
+              key={message.id} 
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-medium">
-                  {message.role === 'user' ? 'You' : 'GyaanSetu'}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {formatTime(message.timestamp)}
-                </span>
-              </div>
-              
-              <p className="whitespace-pre-wrap">{message.content}</p>
-              
-              {message.toolResult && (
-                <div className="mt-3">
-                  {message.toolResult.type === 'quiz' && renderQuiz(message.toolResult.content as QuizQuestion[])}
-                  {message.toolResult.type === 'flashcard' && renderFlashcards(message.toolResult.content as Flashcard[])}
+              <div 
+                className={`max-w-[85%] ${
+                  message.role === 'user' 
+                    ? 'bg-primary/20 rounded-t-2xl rounded-l-2xl' 
+                    : 'bg-sarathi-darkCard rounded-t-2xl rounded-r-2xl'
+                } p-4`}
+              >
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs font-medium">
+                    {message.role === 'user' ? 'You' : 'GyaanSetu'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatTime(message.timestamp)}
+                  </span>
                 </div>
-              )}
+                
+                <p className="whitespace-pre-wrap">{message.content}</p>
+                
+                {message.toolResult && (
+                  <div className="mt-3">
+                    {message.toolResult.type === 'quiz' && renderQuiz(message.toolResult.content as QuizQuestion[])}
+                    {message.toolResult.type === 'flashcard' && renderFlashcards(message.toolResult.content as Flashcard[])}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex justify-start">
-            <Card className="max-w-[85%] bg-sarathi-darkCard border-sarathi-gray/30">
-              <CardContent className="p-4 flex items-center gap-3">
-                <Loader size={16} className="animate-spin" />
-                <p>GyaanSetu is thinking...</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-    </ScrollArea>
+          ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <Card className="max-w-[85%] bg-sarathi-darkCard border-sarathi-gray/30">
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Loader size={16} className="animate-spin" />
+                  <p>GyaanSetu is thinking...</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
+      <form onSubmit={handleSend} className="flex gap-2 mt-2">
+        <input
+          type="text"
+          className="flex-1 rounded px-3 py-2 bg-sarathi-darkCard border border-sarathi-gray/30 text-white"
+          placeholder="Type your message..."
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          disabled={isLoading}
+        />
+        <button
+          type="submit"
+          className="px-4 py-2 rounded bg-primary text-white disabled:opacity-50"
+          disabled={isLoading || !input.trim()}
+        >
+          Send
+        </button>
+      </form>
+    </div>
   );
 };

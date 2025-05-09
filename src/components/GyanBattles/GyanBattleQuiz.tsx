@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -109,6 +108,7 @@ interface Question {
   question: string;
   options: string[];
   answer: number;
+  explanation?: string;
 }
 
 interface GyanBattleQuizProps {
@@ -120,6 +120,50 @@ interface GyanBattleQuizProps {
 // OpenRouter API configuration
 const API_HOST = "https://openrouter.ai/api/v1";
 const API_KEY = "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";
+
+// Even wilder/funnier/emoji comments
+const CORRECT_COMMENTS = [
+  "🎉 What?! You got it right? Are you a mind reader or just a genius?",
+  "😲 Ugh, you got it right! I'm impressed… but also a little jealous!",
+  "🧠 You must have eaten extra brain food today!",
+  "😎 Correct! I'll get you next time, smarty pants!",
+  "🤖 You nailed it! Are you sure you're not a robot?",
+  "🔥 Wow, you're on fire! I wish I was that smart.",
+  "🥳 Boom! Genius alert!",
+  "💡 You cracked it! I'm taking notes.",
+  "👏 Okay, now you're just showing off!",
+  "🏆 Winner winner, quiz dinner!"
+];
+const INCORRECT_COMMENTS = [
+  "🙈 Oops! That wasn't it. But hey, at least you didn't break the internet!",
+  "🤪 Wrong answer! But don't worry, even Einstein had bad days.",
+  "🪙 Nope! Maybe try flipping a coin next time?",
+  "😅 That's not it! But hey, you're still my favorite human.",
+  "😬 Oh no! The quiz gods are not amused. Try again!",
+  "😂 Well, that's one way to keep me entertained!",
+  "🤷‍♂️ Not quite! But you get an A+ for effort!",
+  "🥲 Oof! That was a plot twist.",
+  "🦄 Wrong! But at least you're unique!",
+  "🍀 Maybe you need a lucky charm for the next one!"
+];
+
+function speak(text) {
+  window.speechSynthesis.cancel();
+  // Add a short pause for comic effect
+  setTimeout(() => {
+    const utter = new window.SpeechSynthesisUtterance(text);
+    // Randomize pitch and rate for fun
+    utter.pitch = 1 + (Math.random() - 0.5) * 0.6; // 0.7 to 1.3
+    utter.rate = 1 + (Math.random() - 0.5) * 0.3; // 0.85 to 1.15
+    // Try to pick a fun/child/expressive voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const funVoice = voices.find(v => /child|kids|fun|comic|junior|boy|girl/i.test(v.name));
+    if (funVoice) {
+      utter.voice = funVoice;
+    }
+    window.speechSynthesis.speak(utter);
+  }, 250); // 250ms pause
+}
 
 const GyanBattleQuiz = ({ 
   topic, 
@@ -134,6 +178,8 @@ const GyanBattleQuiz = ({
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(15);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState("");
+  const [explanationText, setExplanationText] = useState("");
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
@@ -262,21 +308,46 @@ const GyanBattleQuiz = ({
     };
   }, [questions.length, currentQuestionIndex, isAnswered]);
 
+  // Read question and options aloud when a new question is shown
+  useEffect(() => {
+    if (questions.length > 0 && !isAnswered) {
+      const q = questions[currentQuestionIndex];
+      let text = `Question ${currentQuestionIndex + 1}. ${q.question}. Options: `;
+      text += q.options.map((opt, i) => `${String.fromCharCode(65 + i)}. ${opt}`).join(". ");
+      speak(text);
+    }
+    // Only when question changes or isAnswered resets
+    // eslint-disable-next-line
+  }, [questions, currentQuestionIndex, isAnswered]);
+
   const handleOptionSelect = (index: number) => {
     if (isAnswered) return;
-    
     setSelectedOption(index);
     setIsAnswered(true);
-    
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    
-    // Check if answer is correct
+    // Use the already defined currentQuestion
     const currentQuestion = questions[currentQuestionIndex];
+    let comment = "";
+    let explanation = "";
     if (index === currentQuestion.answer) {
       setScore((prev) => prev + 1);
+      comment = CORRECT_COMMENTS[Math.floor(Math.random() * CORRECT_COMMENTS.length)];
+      setExplanationText("");
+    } else {
+      comment = INCORRECT_COMMENTS[Math.floor(Math.random() * INCORRECT_COMMENTS.length)];
+      // Prefer explanation from API if available
+      if (currentQuestion.explanation) {
+        explanation = `💡 ${currentQuestion.explanation}`;
+      } else {
+        const correctLetter = String.fromCharCode(65 + currentQuestion.answer);
+        explanation = `💡 The correct answer is ${correctLetter}: ${currentQuestion.options[currentQuestion.answer]}.`;
+      }
+      setExplanationText(explanation);
     }
+    setCommentText(comment);
+    speak(comment + (explanation ? ' ' + explanation : ''));
   };
 
   const handleNextQuestion = () => {
@@ -284,6 +355,8 @@ const GyanBattleQuiz = ({
       setCurrentQuestionIndex((prev) => prev + 1);
       setSelectedOption(null);
       setIsAnswered(false);
+      setCommentText("");
+      setExplanationText("");
     } else {
       // Quiz complete
       onComplete(score, questions.length);
@@ -356,6 +429,14 @@ const GyanBattleQuiz = ({
             </Button>
           ))}
         </div>
+        {isAnswered && (
+          <div className="mt-6">
+            <div className="text-lg font-semibold text-primary mb-2" style={{fontSize: '1.3em', color: '#ffb300'}}>{commentText}</div>
+            {explanationText && (
+              <div className="text-base font-bold" style={{color: '#00e676'}}>{explanationText}</div>
+            )}
+          </div>
+        )}
       </Card>
       
       {isAnswered && (

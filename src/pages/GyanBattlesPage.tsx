@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavBar } from "@/components/NavBar";
@@ -6,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { GyanWheel } from "@/components/GyanBattles/GyanWheel";
-import { GyanBattleQuiz } from "@/components/GyanBattles/GyanBattleQuiz";
+import GyanBattleQuiz from "@/components/GyanBattles/GyanBattleQuiz";
 import { GyanBattleResults } from "@/components/GyanBattles/GyanBattleResults";
 import { GyanBattleLeaderboard } from "@/components/GyanBattles/GyanBattleLeaderboard";
 import { toast } from "@/components/ui/use-toast";

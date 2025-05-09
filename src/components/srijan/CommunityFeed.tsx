@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Search, Star, Award, Badge, Video, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,6 +82,72 @@ export const CommunityFeed = () => {
     if (a.status !== 'approved' && b.status === 'approved') return 1;
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
+
+  // Force several dummy posts for testing and demo
+  const forcedDummyIdeas = [
+    {
+      id: "forced-dummy-mine",
+      title: "Eco-Friendly School Uniforms",
+      description: "Uniforms made from recycled cotton and plastic fibers, designed by students to promote sustainability and comfort.",
+      media_url: null,
+      user_id: profile?.id || "dummyuser-mine",
+      status: "approved",
+      challenge_id: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      profiles: { first_name: profile?.first_name || "You", last_name: profile?.last_name || "(Student)" },
+      professor_feedback: "Great initiative! Consider adding a plan for collecting used uniforms for recycling."
+    },
+    {
+      id: "forced-dummy-1",
+      title: "Low-Cost Water Purifier for Schools",
+      description: "A simple, affordable water purification system using sand, charcoal, and UV light to provide clean drinking water for students in rural schools.",
+      media_url: null,
+      user_id: "dummyuser1",
+      status: "approved",
+      challenge_id: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      profiles: { first_name: "Anjali", last_name: "Mishra" }
+    },
+    {
+      id: "forced-dummy-2",
+      title: "Mobile Science Lab",
+      description: "A van equipped with science experiment kits and interactive models that visits government schools weekly, making science fun and hands-on for all students.",
+      media_url: null,
+      user_id: "dummyuser2",
+      status: "approved",
+      challenge_id: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      profiles: { first_name: "Vikram", last_name: "Singh" }
+    },
+    {
+      id: "forced-dummy-3",
+      title: "Digital Literacy Drive",
+      description: "A peer-led program where older students teach basic computer and internet skills to younger students and their families, helping bridge the digital divide in the community.",
+      media_url: null,
+      user_id: "dummyuser3",
+      status: "approved",
+      challenge_id: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      profiles: { first_name: "Fatima", last_name: "Khan" }
+    },
+    {
+      id: "forced-dummy-4",
+      title: "Solar Study Lamps",
+      description: "Distributing solar-powered study lamps to students in villages with unreliable electricity, ensuring every child can study after sunset.",
+      media_url: null,
+      user_id: "dummyuser4",
+      status: "approved",
+      challenge_id: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      profiles: { first_name: "Rohan", last_name: "Das" }
+    }
+  ];
+  const sortedIdeasWithDummy = [...forcedDummyIdeas, ...sortedIdeas];
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -175,6 +240,12 @@ export const CommunityFeed = () => {
         </CardHeader>
         <CardContent>
           <p className="text-sm mb-4">{idea.description}</p>
+          {showFeedback && idea.professor_feedback && (
+            <div className="mb-4 p-3 rounded bg-sarathi-gray/20 border-l-4 border-blue-400 text-blue-200">
+              <div className="font-semibold mb-1">Professor Feedback:</div>
+              <div>{idea.professor_feedback}</div>
+            </div>
+          )}
           
           {idea.media_url && (
             <div className="rounded-lg overflow-hidden mb-4 max-h-[300px]">
@@ -266,7 +337,7 @@ export const CommunityFeed = () => {
 
           <TabsContent value="all" className="mt-6">
             {isLoadingIdeas ? renderLoadingState() : (
-              sortedIdeas.length === 0 ? (
+              sortedIdeasWithDummy.length === 0 ? (
                 <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
                   <CardContent className="flex flex-col items-center justify-center py-8">
                     <p className="text-muted-foreground">No ideas found matching your search.</p>
@@ -274,7 +345,7 @@ export const CommunityFeed = () => {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {sortedIdeas.map(idea => renderIdeaCard(idea, false))}
+                  {sortedIdeasWithDummy.map(idea => renderIdeaCard(idea, false))}
                 </div>
               )
             )}
@@ -282,7 +353,7 @@ export const CommunityFeed = () => {
 
           <TabsContent value="my-posts" className="mt-6">
             {isLoadingIdeas ? renderLoadingState() : (
-              sortedIdeas.filter(idea => idea.user_id === profile?.id).length === 0 ? (
+              sortedIdeasWithDummy.filter(idea => idea.user_id === profile?.id).length === 0 ? (
                 <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
                   <CardContent className="flex flex-col items-center justify-center py-8">
                     <p className="text-muted-foreground">You haven't posted any ideas yet.</p>
@@ -290,7 +361,7 @@ export const CommunityFeed = () => {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {sortedIdeas
+                  {sortedIdeasWithDummy
                     .filter(idea => idea.user_id === profile?.id)
                     .map(idea => renderIdeaCard(idea, true))
                   }
@@ -303,7 +374,7 @@ export const CommunityFeed = () => {
 
       {profile?.role !== "student" && (
         isLoadingIdeas ? renderLoadingState() : (
-          sortedIdeas.length === 0 ? (
+          sortedIdeasWithDummy.length === 0 ? (
             <Card className="bg-sarathi-darkCard border-sarathi-gray/30">
               <CardContent className="flex flex-col items-center justify-center py-8">
                 <p className="text-muted-foreground">No ideas found matching your search.</p>
@@ -311,7 +382,7 @@ export const CommunityFeed = () => {
             </Card>
           ) : (
             <div className="space-y-4">
-              {sortedIdeas.map(idea => renderIdeaCard(idea, profile?.role === "professor"))}
+              {sortedIdeasWithDummy.map(idea => renderIdeaCard(idea, profile?.role === "professor"))}
             </div>
           )
         )

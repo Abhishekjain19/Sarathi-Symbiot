@@ -42,6 +42,130 @@ export interface IdeaDraft {
   media_file?: File;
 }
 
+// Dummy posts for Srijan community feed
+const DUMMY_IDEAS: Idea[] = [
+  {
+    id: "dummy1",
+    title: "Solar-Powered School Bag",
+    description: "A backpack with built-in solar panels to charge devices and power a small reading light for students in rural areas.",
+    media_url: null,
+    user_id: "user1",
+    status: "approved",
+    challenge_id: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+    profiles: { first_name: "Aarav", last_name: "Sharma" }
+  },
+  {
+    id: "dummy2",
+    title: "Plastic Bottle Brick Construction",
+    description: "Using discarded plastic bottles filled with sand as eco-friendly bricks for building low-cost classrooms.",
+    media_url: null,
+    user_id: "user2",
+    status: "approved",
+    challenge_id: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(),
+    profiles: { first_name: "Meera", last_name: "Patel" }
+  },
+  {
+    id: "dummy3",
+    title: "Community Library on Wheels",
+    description: "A mobile library van that brings books and digital learning to remote villages every week.",
+    media_url: null,
+    user_id: "user3",
+    status: "approved",
+    challenge_id: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 6).toISOString(),
+    profiles: { first_name: "Rahul", last_name: "Verma" }
+  },
+  {
+    id: "dummy4",
+    title: "Rainwater Harvesting for Schools",
+    description: "A simple rainwater collection system to provide clean water for handwashing and gardening in government schools.",
+    media_url: null,
+    user_id: "user4",
+    status: "approved",
+    challenge_id: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 8).toISOString(),
+    profiles: { first_name: "Simran", last_name: "Kaur" }
+  },
+  {
+    id: "dummy5",
+    title: "Interactive Science Wall",
+    description: "A painted wall in the schoolyard with science puzzles, math games, and fun facts for students to interact with during breaks.",
+    media_url: null,
+    user_id: "user5",
+    status: "approved",
+    challenge_id: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
+    profiles: { first_name: "Priya", last_name: "Nair" }
+  },
+  {
+    id: "dummy6",
+    title: "Smart Attendance System",
+    description: "A mobile app that uses QR codes to mark student attendance quickly and accurately, reducing paperwork for teachers.",
+    media_url: null,
+    user_id: "user6",
+    status: "approved",
+    challenge_id: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(),
+    profiles: { first_name: "Tanvi", last_name: "Reddy" }
+  },
+  {
+    id: "dummy7",
+    title: "Green School Initiative",
+    description: "A student-led campaign to plant trees and create a vegetable garden in the schoolyard, promoting sustainability and healthy eating.",
+    media_url: null,
+    user_id: "user7",
+    status: "approved",
+    challenge_id: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString(),
+    profiles: { first_name: "Mohammed", last_name: "Iqbal" }
+  },
+  {
+    id: "dummy8",
+    title: "Recycled Art Competition",
+    description: "An annual event where students create art and models from recycled materials, raising awareness about waste management.",
+    media_url: null,
+    user_id: "user8",
+    status: "approved",
+    challenge_id: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 16).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 16).toISOString(),
+    profiles: { first_name: "Fatima", last_name: "Sheikh" }
+  },
+  {
+    id: "dummy9",
+    title: "Peer Tutoring Program",
+    description: "Older students volunteer to tutor younger students in math and science, building leadership and teamwork skills.",
+    media_url: null,
+    user_id: "user9",
+    status: "approved",
+    challenge_id: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 18).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 18).toISOString(),
+    profiles: { first_name: "Ritika", last_name: "Jain" }
+  },
+  {
+    id: "dummy10",
+    title: "Water Bottle Refill Station",
+    description: "A student-designed water station that encourages everyone to refill bottles instead of buying new plastic ones.",
+    media_url: null,
+    user_id: "user10",
+    status: "approved",
+    challenge_id: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 20).toISOString(),
+    profiles: { first_name: "Sahil", last_name: "Chopra" }
+  }
+];
+
 export function useIdeas() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [ideaDrafts, setIdeaDrafts] = useState<IdeaDraft[]>([]);
@@ -164,9 +288,13 @@ export function useIdeas() {
           profiles: profileMap[idea.user_id] || { first_name: null, last_name: null }
         })) as Idea[]; // Cast the entire array to Idea[]
         
-        setIdeas(ideasWithProfiles);
+        if ((ideasWithProfiles && ideasWithProfiles.length === 0) || !ideasWithProfiles) {
+          setIdeas([...DUMMY_IDEAS]);
+        } else {
+          setIdeas([...ideasWithProfiles, ...DUMMY_IDEAS]);
+        }
       } else {
-        setIdeas([]);
+        setIdeas([...DUMMY_IDEAS]);
       }
     } catch (error: any) {
       console.error("Error fetching ideas:", error.message);
