@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -13,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const OPENROUTE_API_KEY = "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";
+const OPENROUTE_API_KEY = "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";
 
 interface GyanBattleResultsProps {
   results: {
