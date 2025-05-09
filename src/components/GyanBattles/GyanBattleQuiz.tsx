@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -192,7 +193,7 @@ export const GyanBattleQuiz = ({
         toast({
           title: "Using fallback questions",
           description: "We couldn't connect to our quiz service. Using basic questions instead.",
-          variant: "warning",
+          variant: "default", // Changed from "warning" to "default"
           duration: 4000,
         });
         

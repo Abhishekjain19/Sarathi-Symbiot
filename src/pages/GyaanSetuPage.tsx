@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { NavBar } from "@/components/NavBar";
@@ -132,7 +133,7 @@ const GyaanSetuPage = () => {
         toast({
           title: "Connection Issues",
           description: "Using offline response mode due to API limitations",
-          variant: "warning",
+          variant: "destructive", // Changed from "warning" to "destructive"
           duration: 4000,
         });
       } else {
