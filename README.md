@@ -1,73 +1,57 @@
-# Welcome to your Lovable project
+# 🌱 Sarathi - Empowering Rural Education
 
-## Project info
+![GitHub repo size](https://img.shields.io/github/repo-size/Abhishekjain19/Sarathi-Symbiot)
+![GitHub stars](https://img.shields.io/github/stars/Abhishekjain19/Sarathi-Symbiot?style=social)
+![GitHub forks](https://img.shields.io/github/forks/Abhishekjain19/Sarathi-Symbiot?style=social)
 
-**URL**: https://lovable.dev/projects/168370df-1563-429c-b404-7e31001789e5
+Sarathi is a MERN stack-based platform designed to bridge the gap between education and accessibility in rural areas. By enabling collaboration between NGOs and local teachers, Sarathi helps deliver quality educational content even in low-connectivity zones.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🚀 Features
 
-**Use Lovable**
+- 👥 **NGO–Teacher Interaction Portal**  
+  NGOs can collaborate with local educators to distribute resources and guidance.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/168370df-1563-429c-b404-7e31001789e5) and start prompting.
+- 📥 **Offline Content Access**  
+  Learners can download educational materials and use them without internet access.
 
-Changes made via Lovable will be committed automatically to this repo.
+- 📶 **Low-Bandwidth Optimization**  
+  Lightweight design ensures smooth performance in areas with slow internet.
 
-**Use your preferred IDE**
+- 📚 **Custom Content Management**  
+  Upload, manage, and distribute subject-wise content tailored for rural learners.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🧠 AI/ML Integration (for Hackathon)
 
-Follow these steps:
+Sarathi includes intelligent features such as:
+- **Personalized Content Recommendations**
+- **Usage Analytics for NGOs and Teachers**
+- *(More AI features in development)*
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🛠️ Built With
 
-# Step 3: Install the necessary dependencies.
-npm i
+- **Frontend**: React.js  
+- **Backend**: Node.js + Express  
+- **Database**: MongoDB  
+- **Authentication**: JWT, bcrypt  
+- **Tools**: Cursor, Lovable
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+---
 
-**Edit a file directly in GitHub**
+## 📸 Screenshots (Coming Soon)
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+> Add screenshots/gifs showing major features, once UI is done.
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🏁 Getting Started
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/168370df-1563-429c-b404-7e31001789e5) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/Abhishekjain19/Sarathi-Symbiot.git
+   cd Sarathi-Symbiot
