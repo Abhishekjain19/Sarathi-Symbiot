@@ -1,9 +1,5 @@
 # 🌱 Sarathi - Empowering Rural Education
 
-![GitHub repo size](https://img.shields.io/github/repo-size/Abhishekjain19/Sarathi-Symbiot)
-![GitHub stars](https://img.shields.io/github/stars/Abhishekjain19/Sarathi-Symbiot?style=social)
-![GitHub forks](https://img.shields.io/github/forks/Abhishekjain19/Sarathi-Symbiot?style=social)
-
 Sarathi is a MERN stack-based platform designed to bridge the gap between education and accessibility in rural areas. By enabling collaboration between NGOs and local teachers, Sarathi helps deliver quality educational content even in low-connectivity zones.
 
 ---
@@ -29,7 +25,6 @@ Sarathi is a MERN stack-based platform designed to bridge the gap between educat
 Sarathi includes intelligent features such as:
 - **Personalized Content Recommendations**
 - **Usage Analytics for NGOs and Teachers**
-- *(More AI features in development)*
 
 ---
 
@@ -37,17 +32,11 @@ Sarathi includes intelligent features such as:
 
 - **Frontend**: React.js  
 - **Backend**: Node.js + Express  
-- **Database**: MongoDB  
+- **Database**: Supabase  
 - **Authentication**: JWT, bcrypt  
-- **Tools**: Cursor, Lovable
 
 ---
 
-## 📸 Screenshots (Coming Soon)
-
-> Add screenshots/gifs showing major features, once UI is done.
-
----
 
 ## 🏁 Getting Started
 
