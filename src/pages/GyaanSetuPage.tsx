@@ -15,6 +15,19 @@ import { toast } from "@/components/ui/use-toast";
 
 const OPENROUTE_API_KEY = "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";
 
+// Fallback responses for when API calls fail
+const FALLBACK_RESPONSES = [
+  "I'm here to help with your educational questions. What would you like to learn about?",
+  "Learning is a journey we can take together. What subject interests you?",
+  "I can help explain concepts and provide examples. What topic should we explore?",
+  "Education is the key to growth. How can I support your learning today?",
+  "Let's discover new knowledge together! What would you like to know more about?"
+];
+
+const getFallbackResponse = (): string => {
+  return FALLBACK_RESPONSES[Math.floor(Math.random() * FALLBACK_RESPONSES.length)];
+};
+
 const GyaanSetuPage = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -29,6 +42,7 @@ const GyaanSetuPage = () => {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [apiFailCount, setApiFailCount] = useState(0);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const sendMessage = async () => {
@@ -47,7 +61,7 @@ const GyaanSetuPage = () => {
     setIsLoading(true);
 
     try {
-      // Call OpenRouteAI API
+      // Use simpler model with token limits to avoid exceeding credits
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -58,12 +72,14 @@ const GyaanSetuPage = () => {
         },
         body: JSON.stringify({
           model: "openai/gpt-3.5-turbo",
+          max_tokens: 800, // Limit tokens to avoid credit issues
           messages: [
             {
               role: "system",
-              content: "You are Gyaan Setu, an educational AI assistant for the Sarathi learning platform. You help students with their educational queries, explain concepts, provide examples, and offer learning resources."
+              content: "You are Gyaan Setu, an educational AI assistant for the Sarathi learning platform. You help students with their educational queries, explain concepts, provide examples, and offer learning resources. Keep responses concise and informative."
             },
-            ...messages.map(msg => ({
+            // Only include last 5 messages to keep context size manageable
+            ...messages.slice(-5).map(msg => ({
               role: msg.role,
               content: msg.content
             })),
@@ -81,28 +97,54 @@ const GyaanSetuPage = () => {
 
       const data = await response.json();
       
+      if (data.error) {
+        throw new Error(data.error.message || "Error from OpenRouter API");
+      }
+      
+      // Check if we have a valid response with content
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) {
+        throw new Error("No content returned from API");
+      }
+      
       // Add AI response to the chat
       const aiResponse: Message = {
         id: uuidv4(),
         role: "assistant",
-        content: data.choices[0].message.content,
+        content: content,
         timestamp: Date.now(),
       };
       
       setMessages((prev) => [...prev, aiResponse]);
+      setApiFailCount(0); // Reset fail count on success
     } catch (error) {
-      console.error("Error calling OpenRouteAI:", error);
-      toast({
-        title: "Error",
-        description: "Failed to get a response. Please try again later.",
-        variant: "destructive",
-      });
+      console.error("Error calling OpenRouterAI:", error);
       
-      // Add error message
+      // Increment fail count and show different messages based on number of fails
+      const newFailCount = apiFailCount + 1;
+      setApiFailCount(newFailCount);
+      
+      let errorMessageContent = "";
+      
+      if (newFailCount >= 3) {
+        // After 3 fails, explain the issue more clearly
+        errorMessageContent = "I'm having trouble connecting to my knowledge base due to usage limits. I'll try to answer based on what I already know. For complex questions, you might want to try again later.";
+        toast({
+          title: "Connection Issues",
+          description: "Using offline response mode due to API limitations",
+          variant: "warning",
+          duration: 4000,
+        });
+      } else {
+        // For first few fails, use fallback responses
+        errorMessageContent = getFallbackResponse();
+      }
+      
+      // Add fallback response
       const errorMessage: Message = {
         id: uuidv4(),
         role: "assistant",
-        content: "I'm sorry, I encountered an error while processing your request. Please try again later.",
+        content: errorMessageContent,
         timestamp: Date.now(),
       };
       

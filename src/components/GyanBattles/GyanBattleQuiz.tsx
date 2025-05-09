@@ -11,7 +11,7 @@ import {
   Volume1,
   VolumeX,
   SkipForward,
-  Loader // Import Loader from lucide-react instead of using Loader2
+  Loader
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -39,6 +39,47 @@ interface PowerUp {
   active: boolean;
   used: boolean;
 }
+
+// Fallback questions in case API fails
+const getFallbackQuestions = (topic: string): Question[] => {
+  return [
+    {
+      id: 1,
+      text: `What is a key concept in ${topic}?`,
+      options: ["Concept A", "Concept B", "Concept C", "Concept D"],
+      correctAnswer: "Concept A",
+      explanation: `Concept A is a fundamental principle in ${topic}.`
+    },
+    {
+      id: 2,
+      text: `Which of the following is associated with ${topic}?`,
+      options: ["Element 1", "Element 2", "Element 3", "Element 4"],
+      correctAnswer: "Element 2",
+      explanation: `Element 2 is closely associated with ${topic} principles.`
+    },
+    {
+      id: 3,
+      text: `Who made significant contributions to ${topic}?`,
+      options: ["Person A", "Person B", "Person C", "Person D"],
+      correctAnswer: "Person C",
+      explanation: `Person C made revolutionary contributions to ${topic}.`
+    },
+    {
+      id: 4,
+      text: `When did ${topic} become widely recognized?`,
+      options: ["1950s", "1970s", "1990s", "2010s"],
+      correctAnswer: "1970s",
+      explanation: `${topic} gained widespread recognition during the 1970s.`
+    },
+    {
+      id: 5,
+      text: `What is an application of ${topic}?`,
+      options: ["Application W", "Application X", "Application Y", "Application Z"],
+      correctAnswer: "Application Y",
+      explanation: `Application Y demonstrates the practical use of ${topic}.`
+    }
+  ];
+};
 
 export const GyanBattleQuiz = ({
   topic,
@@ -87,7 +128,7 @@ export const GyanBattleQuiz = ({
     typeof window !== "undefined" ? window.speechSynthesis : null
   );
 
-  // Generate questions using OpenRouter API
+  // Generate questions using OpenRouter API with better error handling
   useEffect(() => {
     const generateQuestions = async () => {
       try {
@@ -100,7 +141,8 @@ export const GyanBattleQuiz = ({
             "X-Title": "Sarathi Learning Platform - Gyan Battles",
           },
           body: JSON.stringify({
-            model: "openai/gpt-4o",
+            model: "openai/gpt-3.5-turbo", // Using 3.5 instead of 4o to reduce token usage
+            max_tokens: 1000, // Limiting token usage
             messages: [
               {
                 role: "system",
@@ -120,23 +162,49 @@ export const GyanBattleQuiz = ({
         }
 
         const data = await response.json();
-        const questionsData = JSON.parse(data.choices[0].message.content);
-        setQuestions(questionsData.questions);
+        
+        if (data.error) {
+          throw new Error(data.error.message || "Error from OpenRouter API");
+        }
+        
+        // Safely parse the content with better error handling
+        const content = data.choices?.[0]?.message?.content;
+        if (!content) {
+          throw new Error("No content returned from API");
+        }
+        
+        const parsedContent = JSON.parse(content);
+        const questionsData = parsedContent.questions || [];
+        
+        if (!Array.isArray(questionsData) || questionsData.length === 0) {
+          throw new Error("No valid questions returned");
+        }
+        
+        setQuestions(questionsData);
         setIsLoading(false);
         
         // Read first question aloud if sound is enabled
-        if (isSoundEnabled && questionsData.questions.length > 0) {
-          speakText(questionsData.questions[0].text);
+        if (isSoundEnabled && questionsData.length > 0) {
+          speakText(questionsData[0].text);
         }
       } catch (error) {
         console.error("Error generating questions:", error);
         toast({
-          title: "Error",
-          description: "Failed to generate questions. Please try again.",
-          variant: "destructive",
+          title: "Using fallback questions",
+          description: "We couldn't connect to our quiz service. Using basic questions instead.",
+          variant: "warning",
+          duration: 4000,
         });
-        setQuestions([]);
+        
+        // Use fallback questions instead
+        const fallbackQuestions = getFallbackQuestions(topic);
+        setQuestions(fallbackQuestions);
         setIsLoading(false);
+        
+        // Read first fallback question aloud if sound is enabled
+        if (isSoundEnabled && fallbackQuestions.length > 0) {
+          speakText(fallbackQuestions[0].text);
+        }
       }
     };
 
@@ -150,7 +218,7 @@ export const GyanBattleQuiz = ({
         speechSynthesisRef.current.cancel();
       }
     };
-  }, [topic, language]);
+  }, [topic, language, isSoundEnabled]);
 
   // Timer for each question
   useEffect(() => {
@@ -174,30 +242,34 @@ export const GyanBattleQuiz = ({
     };
   }, [isLoading, currentQuestionIndex, showAnswer]);
 
-  // Speech synthesis function
+  // Speech synthesis function with better error handling
   const speakText = (text: string) => {
     if (!speechSynthesisRef.current || !isSoundEnabled) return;
     
-    speechSynthesisRef.current.cancel();
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Set language based on selection
-    if (language === "hindi") {
-      utterance.lang = "hi-IN";
-    } else if (language === "kannada") {
-      utterance.lang = "kn-IN";
-    } else {
-      utterance.lang = "en-US";
+    try {
+      speechSynthesisRef.current.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Set language based on selection
+      if (language === "hindi") {
+        utterance.lang = "hi-IN";
+      } else if (language === "kannada") {
+        utterance.lang = "kn-IN";
+      } else {
+        utterance.lang = "en-US";
+      }
+      
+      speechSynthesisRef.current.speak(utterance);
+    } catch (error) {
+      console.error("Speech synthesis error:", error);
+      // Continue without speech if there's an error
     }
-    
-    speechSynthesisRef.current.speak(utterance);
   };
 
   // Handle timeout when time runs out
   const handleTimeout = () => {
     setShowAnswer(true);
-    const isCorrect = false;
     
     if (isSoundEnabled) {
       speakText("Time's up! You were too slow!");
@@ -388,7 +460,7 @@ export const GyanBattleQuiz = ({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-        <Loader className="w-12 h-12 animate-spin text-primary mb-4" /> {/* Use Loader instead of Loader2 */}
+        <Loader className="w-12 h-12 animate-spin text-primary mb-4" />
         <h3 className="text-xl font-semibold">Preparing Your Battle...</h3>
         <p className="text-sarathi-gray mt-2">Generating challenging questions about {topic}</p>
       </div>

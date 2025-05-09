@@ -26,6 +26,19 @@ interface GyanBattleResultsProps {
   onPlayAgain: () => void;
 }
 
+// Fallback performance reviews in case API fails
+const getFallbackReview = (score: number, totalPossible: number, gameResult: string): string => {
+  const percentage = Math.round((score / totalPossible) * 100);
+  
+  if (gameResult === 'win') {
+    return "Congratulations on your victory! Your knowledge power shines brightly today. Keep up the great work!";
+  } else if (gameResult === 'lose') {
+    return "Nice effort, but the AI got the better of you this time! Practice makes perfect - come back for a rematch!";
+  } else {
+    return "A perfect tie! Great minds think alike. Challenge yourself again to break the deadlock!";
+  }
+};
+
 export const GyanBattleResults = ({
   results,
   onPlayAgain
@@ -36,7 +49,9 @@ export const GyanBattleResults = ({
   const [badges, setBadges] = useState<{name: string, earned: boolean}[]>([]);
   
   // Calculate score percentage
-  const scorePercentage = Math.round((results.score / (results.totalQuestions * 10)) * 100);
+  const scorePercentage = results.totalQuestions > 0 
+    ? Math.round((results.score / (results.totalQuestions * 10)) * 100)
+    : 0;
   
   // Determine win/lose/draw status
   const gameResult = results.score > results.oppScore 
@@ -45,7 +60,7 @@ export const GyanBattleResults = ({
     ? 'lose' 
     : 'draw';
 
-  // Generate AI performance review
+  // Generate AI performance review with better error handling
   useEffect(() => {
     const generatePerformanceReview = async () => {
       try {
@@ -58,7 +73,8 @@ export const GyanBattleResults = ({
             "X-Title": "Sarathi Learning Platform - Gyan Battles",
           },
           body: JSON.stringify({
-            model: "openai/gpt-3.5-turbo",
+            model: "openai/gpt-3.5-turbo", // Using 3.5 instead of 4o to reduce token usage
+            max_tokens: 150, // Limiting token usage
             messages: [
               {
                 role: "system",
@@ -82,7 +98,18 @@ export const GyanBattleResults = ({
         }
 
         const data = await response.json();
-        setPerformanceReview(data.choices[0].message.content.trim());
+        
+        if (data.error) {
+          throw new Error(data.error.message || "Error from OpenRouter API");
+        }
+        
+        // Safely extract the content
+        const content = data.choices?.[0]?.message?.content;
+        if (!content) {
+          throw new Error("No content returned from API");
+        }
+        
+        setPerformanceReview(content.trim());
         
         // Determine earned badges
         const newBadges = [
@@ -112,7 +139,32 @@ export const GyanBattleResults = ({
         setIsLoading(false);
       } catch (error) {
         console.error("Error generating performance review:", error);
-        setPerformanceReview("Great effort! You've shown some real knowledge power today!");
+        
+        // Use fallback performance review when API fails
+        const fallbackReview = getFallbackReview(results.score, results.totalQuestions * 10, gameResult);
+        setPerformanceReview(fallbackReview);
+        
+        // Set standard badges
+        const newBadges = [
+          {
+            name: "Victory",
+            earned: gameResult === 'win'
+          },
+          {
+            name: "Perfect Score",
+            earned: scorePercentage === 100
+          },
+          {
+            name: "Knowledge Seeker",
+            earned: true // Everyone gets this for playing
+          },
+          {
+            name: `${results.topic} Expert`,
+            earned: scorePercentage >= 80
+          },
+        ];
+        
+        setBadges(newBadges);
         setIsLoading(false);
       }
     };
