@@ -55,3 +55,5 @@ Sarathi includes intelligent features such as:
    ```bash
    git clone https://github.com/Abhishekjain19/Sarathi-Symbiot.git
    cd Sarathi-Symbiot
+   npm install
+   npm run dev
